@@ -14,11 +14,13 @@ html, body {
     font-size: 3em;
     font-family: "nasalization", sans-serif;
     font-weight: 300;
-    color:#ffffff;
+    color: #ffffff;
 }
+
 .FormTitle {
     font-size: 30px;
 }
+
 .HoriStrip {
     position: fixed;
     top: 0;
@@ -31,7 +33,7 @@ html, body {
 }
 
 div#errorMessage {
-    margin-top:100px;
+    margin-top: 100px;
     background: #fff;
     text-align: center;
     color: red;
@@ -42,7 +44,7 @@ div#errorMessage {
 .LoginForm,
 .RegistrationForm {
     position: absolute;
-    top: 58%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 430px;
@@ -53,6 +55,8 @@ div#errorMessage {
     border: 1px solid #ffffff;
     border-radius: 10px;
     text-align: left;
+    min-height: 450px;
+    margin-top: 50px;
 }
 
 .LoginForm div,
@@ -87,6 +91,7 @@ div#errorMessage {
 }
 
 .LoginForm button,
+
 .RegistrationForm button {
     width: 100%;
     padding: 12px;
@@ -99,24 +104,17 @@ div#errorMessage {
     margin-top: 10px;
 }
 
-form::after{
+form::after {
     content: '';
     clear: both;
-    display:block;
+    display: block;
 }
+
 .responseMessage {
-    margin-top: 15px;
+    margin-top: 100px;
+    background: #fff;
     text-align: center;
-}
-
-.responseMessage__success {
-    color: #00ff00; /* bright green */
-    font-size: 1em;
-    font-weight: 600;
-}
-
-.responseMessage__error {
-    color: #ff4c4c; /* red */
-    font-size: 1em;
-    font-weight: 600;
+    color: green;
+    font-size: 20px;
+    padding: 11px;
 }

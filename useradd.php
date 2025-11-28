@@ -2,7 +2,7 @@
 
     session_start();
     //if the user is logged in then send them to the login
-    if(isset($_SESSION['user'])) header('location: login.php');
+    if(isset($_SESSION['user'])) header('location: nasalogin.php');
     $_SESSION['table'] = 'users';
     $user = $_SESSION['user'];
 ?>
