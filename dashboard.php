@@ -11,6 +11,7 @@
 <html>
     <head>
         <link rel="stylesheet" href="default.css">
+        <link rel="stylesheet" href="https://use.typekit.net/pen4uct.css">
     </head>
     <body>
 
@@ -19,7 +20,7 @@
     <div class="circle">
             <div class="planetcenter">
                 <div>
-                    <p><?= $user['first_name'] . ' ' . $user['last_name'] ?></p>
+                    <p class="LoginTitle">Welcome, <?= $user['first_name'] . ' ' . $user['last_name'] ?></p>
                 </div>
                 
             </div>

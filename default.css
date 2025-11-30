@@ -48,7 +48,7 @@ html, body {
     text-decoration: none;
     color: white;
     font-size: 2rem;
-    font-family: "nasalization", sans-serif;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-weight: 300;
     padding: 1rem;
     border-radius: 2rem;
@@ -60,8 +60,8 @@ html, body {
     position: absolute;
     top: 50%;
     left: 50%;
-    height: 70.5625rem;
-    width: 70.5625rem;
+    height: 75.5625rem;
+    width: 75.5625rem;
     transform: translate(-50%, -50%);
 
 }
@@ -115,12 +115,18 @@ html, body {
 }
 
 div#errorMessage {
-    margin-top: 100px;
     background: #fff;
     text-align: center;
     color: red;
     font-size: 20px;
     padding: 11px;
+    z-index: 1000;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0%);
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .LoginForm,
