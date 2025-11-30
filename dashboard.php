@@ -15,13 +15,30 @@
     </head>
     <body>
 
-    <img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo">
+    <a href="dashboard.php"><img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo"></a>
     <a href="database/logout.php" id="logoutBtn">Log out</a>
     <div class="circle">
             <div class="planetcenter">
-                <div>
+
                     <p class="LoginTitle">Welcome, <?= $user['first_name'] . ' ' . $user['last_name'] ?></p>
-                </div>
+
+                    <div class="navcontainer">
+                        <div>
+                            <button>INVENTORY</button>
+                            <span id="space1"></span>
+                            <button>SUPPLY CHAIN MAP</button>
+                        </div>
+                        <div>
+                            <button>SCHEDULE ORDERS</button>
+                            <span id="space2"></span>                            
+                            <button>WASTE</button>
+                        </div>
+                        <div>
+                            <button>LOGS</button>
+                            <span id="space3"></span>
+                            <button>CONTRACTS</button>
+                        </div>
+                    </div>
                 
             </div>
         </div>
