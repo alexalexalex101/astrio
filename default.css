@@ -1,13 +1,15 @@
-html {
-    font-size: 16px;
-}
-
-body {
-    background-color: black;
+* {
     margin: 0;
     padding: 0;
-    font-size: 16px;
+    box-sizing: border-box;
 }
+
+html, body {
+    height: 100%;
+    background-color: #000000;
+    overflow:hidden;
+}
+
 
 .topnav {
     display: flex;
@@ -17,6 +19,8 @@ body {
     height: 6.95rem;
     background-color: #1c2143;
     font-size: 2rem;
+    padding-top:1rem;
+    padding-bottom:1rem;
 }
 
 .topnav a {
@@ -29,6 +33,180 @@ body {
     height:100%;
 }
 
+.nasalogo {
+    position: fixed;
+    height: 10rem;
+    top: 1rem;
+    left:1rem;
+}
+
+#logoutBtn {
+    position: fixed;
+    top: 1rem;
+    right:1rem;
+    background-color: #4b53b9;
+    text-decoration: none;
+    color: white;
+    font-size: 2rem;
+    font-family: "nasalization", sans-serif;
+    font-weight: 300;
+    padding: 1rem;
+    border-radius: 2rem;
+}
+
 .circle {
-      border-radius: 50%;
+    border-radius: 100%;
+    background-color: #cfd9e0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 70.5625rem;
+    width: 70.5625rem;
+    transform: translate(-50%, -50%);
+
+}
+
+.planetcenter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.planetcenter .loginbuttons {
+    width:30.2625rem;
+    height:6.74375rem;
+    margin-top:1rem;
+    margin-bottom: 1em;
+    border-radius: 5rem;
+    background-color: #0e3b8f;
+    color: white;
+    font-family: "nasalization", sans-serif;
+    font-weight: 300;
+    font-size: 2rem;
+}
+
+.planetcenter .loginbuttons:hover {
+    cursor: pointer;
+}
+
+.LoginTitle {
+    font-size: 5rem;
+    font-family: "nasalization", sans-serif;
+    font-weight: 600;
+    color: #023535;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.FormTitle {
+    font-size: 30px;
+}
+
+.HoriStrip {
+    position: fixed;
+    padding: 15px;
+    text-align: center;
+    background-color: #4b53b9;
+    z-index: 1000;
+}
+
+div#errorMessage {
+    margin-top: 100px;
+    background: #fff;
+    text-align: center;
+    color: red;
+    font-size: 20px;
+    padding: 11px;
+}
+
+.LoginForm,
+.RegistrationForm {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 430px;
+    padding: 32px;
+    font-family: "nasalization", sans-serif;
+    background: #4b53b9;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 10px;
+    text-align: left;
+    min-height: 450px;
+}
+
+.LoginForm div,
+.RegistrationForm div {
+    margin-bottom: 18px;
+}
+
+.LoginForm label,
+.RegistrationForm label {
+    display: block;
+    font-size: 1.05em;
+    margin-bottom: 5px;
+    color: #d9dbff;
+}
+
+.LoginForm input,
+.RegistrationForm input {
+    width: 100%;
+    height: 38px;
+    padding: 8px 10px;
+    font-size: 0.95em;
+    border-radius: 6px;
+    background: #ffffff;
+    border: 1px solid #c7c7d2;
+    color: #000;
+}
+
+.LoginForm input:focus,
+.RegistrationForm input:focus {
+    outline: none;
+    border-color: #8a92ff;
+}
+
+.LoginForm button,
+
+.RegistrationForm button {
+    width: 100%;
+    padding: 12px;
+    background-color: #0e1131;
+    color: #686fb9;
+    font-size: 1.15em;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+form::after {
+    content: '';
+    clear: both;
+    display: block;
+}
+
+.responseMessage {
+    margin-top: 15px;
+    background: #fff;
+    text-align: center;
+    color: green;
+    font-size: 20px;
+    padding: 11px;
+    display: block;
+}
+
+.responseMessage__success {
+    color: green;
+    font-weight: bold;
+}
+
+.responseMessage__error {
+    color: red;
+    font-weight: bold;
 }

@@ -41,22 +41,21 @@
     <title>
         NASA Supply Chain Management
     </title>
-    <link rel="stylesheet" type="text/css" href="nasalogin.css">
+    <link rel="stylesheet" type="text/css" href="default.css">
     <link rel="stylesheet" href="https://use.typekit.net/pen4uct.css">
 </head>
      
 <body>
-    
-    <div class="HoriStrip">
-    <h1 class="LoginTitle">
-        NASA DSLM Login
-    </h1>
-    </div>
     <?php if(!empty($error_message)) { ?>
         <div id="errorMessage">
             <p>Error: <?= $error_message ?></p>
         </div>
     <?php } ?>
+
+<a href="index.html"><img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo"></a>
+
+    <div class="circle">
+<div class="planetcenter">    
     <div class="LoginForm">
         <form action="nasalogin.php" method="POST">
             <div class="FormTitle">
@@ -80,11 +79,14 @@
             </div>
         <div class="LoginButton">
             <button>Login</button>
+            <button type="button" onclick="window.location.href='useradd.php'">Register</button>
         </div>
 
         </form>
     </div>
 
+</div>
+</div>
 
 </body>
 </html>

@@ -9,12 +9,21 @@
 ?>
 <!DOCTYPE html>
 <html>
+    <head>
+        <link rel="stylesheet" href="default.css">
+    </head>
     <body>
-        <div>
-            <p><?= $user['first_name'] . ' ' . $user['last_name'] ?></p>
-        </div>
-        <a href="database/logout.php" id="logoutBtn">Log out</a>
 
+    <img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo">
+    <a href="database/logout.php" id="logoutBtn">Log out</a>
+    <div class="circle">
+            <div class="planetcenter">
+                <div>
+                    <p><?= $user['first_name'] . ' ' . $user['last_name'] ?></p>
+                </div>
+                
+            </div>
+        </div>
 </body>
 
 </html>

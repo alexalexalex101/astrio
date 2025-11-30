@@ -5,7 +5,7 @@
 
     session_destroy();
 
-    header('Location: ../nasalogin.php');
+    header('Location: ../index.html');
     exit;
     
 

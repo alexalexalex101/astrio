@@ -13,16 +13,15 @@ $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
 <head>
     <title>NASA User Registration</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="nasalogin.css">
+    <link rel="stylesheet" type="text/css" href="default.css">
     <link rel="stylesheet" href="https://use.typekit.net/pen4uct.css">
 </head>
      
 <body>
+<a href="index.html"><img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo"></a>
     
-    <div class="HoriStrip">
-        <h1 class="LoginTitle">NASA DSLM Registration</h1>
-    </div>
-
+<div class="circle">
+<div class="planetcenter"> 
     <div class="RegistrationForm">
         <!-- registration form sends data to useradd.php using the post method-->
         <form action="database/add.php" method="POST" class="appForm">
@@ -44,6 +43,7 @@ $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
             </div>
 
             <button type="submit" class="appBtn"><i class="fa fa-plus"></i> Add User</button>
+            <button type="button" class="appBtn" onclick="history.back()">< Back</button>            
         </form>
 
         <?php
@@ -63,6 +63,7 @@ $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
         } 
         ?>
     </div>
-
+</div>
+</div>
 </body>
 </html>
