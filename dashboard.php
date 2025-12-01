@@ -24,7 +24,7 @@
 
                     <div class="navcontainer">
                         <div>
-                            <button>INVENTORY</button>
+                            <button onclick="window.location.href='inventory.php'">INVENTORY</button>
                             <span id="space1"></span>
                             <button>SUPPLY CHAIN MAP</button>
                         </div>
