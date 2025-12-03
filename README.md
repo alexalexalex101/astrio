@@ -10,11 +10,9 @@
 
 # Create "inventory":
 
-### Create the database
 CREATE DATABASE IF NOT EXISTS inventory;
 USE inventory;
 
-### Create the users table
 CREATE TABLE IF NOT EXISTS users (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
@@ -27,11 +25,9 @@ CREATE TABLE IF NOT EXISTS users (
 
 # Create "inventoryy":
 
-### Create the database
 CREATE DATABASE IF NOT EXISTS inventoryy CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE inventoryy;
 
-### Hierarchy nodes
 CREATE TABLE IF NOT EXISTS hierarchy (
     id INT AUTO_INCREMENT PRIMARY KEY,
     parent_id INT NULL,
@@ -41,7 +37,6 @@ CREATE TABLE IF NOT EXISTS hierarchy (
     INDEX(parent_id)
 );
 
-### Items placed under a hierarchy node
 CREATE TABLE IF NOT EXISTS items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     hierarchy_id INT NOT NULL,
