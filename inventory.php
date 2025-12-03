@@ -47,14 +47,13 @@ $user = $_SESSION['user'];
             overflow-y: auto;
         }
 
-        /* Rest of your existing styles (table, inputs, buttons, etc.) stay exactly the same */
         #tree { list-style:none; padding-left:6px; font-family: "League Spartan", sans-serif; font-size:1rem; }
         #tree li { padding:6px 8px; cursor:pointer; border-radius:4px; }
         #tree li:hover { background: rgba(255,255,255,0.03); }
         #tree li.selected { background: rgba(75,83,185,0.35); color:#fff; }
         .node-children { margin-left:16px; }
         
-        .items-table { width:100%; border-collapse:collapse; margin-top:12px; }
+        .items-table { width:100%; border-collapse:collapse; margin-top:12px;color: #ffffff; font-family: "League Spartan", sans-serif; }
         .items-table th, .items-table td { padding:10px; border-bottom:1px solid rgba(255,255,255,0.04); text-align:left; }
         .items-table th { color:#cfe0ff; font-weight:700; }
 
@@ -133,7 +132,7 @@ $user = $_SESSION['user'];
 
             <!-- Add Item Form -->
             <div id="itemFormArea" style="display:none; background:rgba(255,255,255,0.04); padding:20px; border-radius:12px; margin-top:20px;">
-                <h3>Add New Item</h3>
+                <h3 class="hierarchytextformat">Add New Item</h3>
                 <form id="itemForm">
                     <input type="hidden" id="form_hierarchy_id">
                     <div style="display:flex; gap:12px; margin-bottom:12px;">
@@ -286,12 +285,19 @@ function showItemForm() {
         alert('Select a node first.');
         return;
     }
+
     document.getElementById('itemFormArea').style.display = 'block';
+
     document.getElementById('form_hierarchy_id').value = currentNode;
+
+    document.getElementById('itemForm').reset();
+
+    document.getElementById('item_name').focus();
 }
 
 function hideItemForm() {
     document.getElementById('itemFormArea').style.display = 'none';
+    document.getElementById('itemForm').reset();
 }
 
 function submitItemForm(e) {
