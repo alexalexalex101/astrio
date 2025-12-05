@@ -1,4 +1,4 @@
-First make suppliers but make sure it is inside inventory not inventorry
+Make sure you run this inside inventory not inventorry
 
 CREATE TABLE suppliers (
   supplier_id INT AUTO_INCREMENT PRIMARY KEY,
