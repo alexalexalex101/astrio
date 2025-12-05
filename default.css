@@ -8,6 +8,7 @@ html, body {
     height: 100%;
     background-color: #000000;
     overflow:hidden;
+    background-image: url(images/space.avif);
 }
 
 @font-face {
@@ -61,7 +62,10 @@ html, body {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-weight: 300;
     padding: 1rem;
-    border-radius: 2rem;    
+    border-radius: 2rem;
+    font-family: "League Spartan", sans-serif;
+    font-weight: 600;
+    box-shadow: 0 0 40px rgba(75,83,185,0.6);
 }
 
 #logoutBtn {
@@ -72,10 +76,11 @@ html, body {
     text-decoration: none;
     color: white;
     font-size: 2rem;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-    font-weight: 300;
+    font-family: "League Spartan", sans-serif;
+    font-weight: 600;
     padding: 1rem;
     border-radius: 2rem;
+    box-shadow: 0 0 40px rgba(75,83,185,0.6);
 }
 
 .circle {
@@ -87,6 +92,8 @@ html, body {
     height: 60vw;
     width: 60vw;
     transform: translate(-50%, -50%);
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.9);
+
 }
 
 .planetcenter {
@@ -111,6 +118,8 @@ html, body {
     font-family: "nasalization", sans-serif;
     font-weight: 300;
     font-size: 2rem;
+    -webkit-box-shadow: inset -1px 3px 8px 5px #1F87FF, 2px 5px 16px 0px #0B325E, 5px 5px 15px 5px rgba(198,115,255,0); 
+box-shadow: inset -1px 3px 8px 5px #1F87FF, 2px 5px 16px 0px #0B325E, 5px 5px 15px 5px rgba(198,115,255,0);
 }
 
 .planetcenter .loginbuttons:hover {
@@ -136,6 +145,8 @@ html, body {
     font-size: 1.5rem;
     font-family: "League Spartan", sans-serif;
     font-weight: 600;
+    -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 15px 5px rgba(198,115,255,0); 
+box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 15px 5px rgba(198,115,255,0);
 }
 
 .navcontainer button:hover {
@@ -162,6 +173,7 @@ html, body {
     text-align: center;
     margin-bottom: 3rem;
     width: 50%;
+    text-shadow: 0 1px 0 #CCCCCC, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15), 3px 2px 11px rgba(51,78,206,0);
 }
 
 .FormTitle {
@@ -202,10 +214,10 @@ div#errorMessage {
     font-family: "nasalization", sans-serif;
     background: #4b53b9;
     color: #ffffff;
-    border: 1px solid #ffffff;
     border-radius: 10px;
     text-align: left;
     min-height: 450px;
+    box-shadow: 0 0 40px rgba(75,83,185,0.9);
 }
 
 .LoginForm div,
