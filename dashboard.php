@@ -26,7 +26,7 @@
                         <div>
                             <button onclick="window.location.href='inventory.php'">INVENTORY</button>
                             <span id="space1"></span>
-                            <button onclick="window.location.href='suppliers.php'">SUPPLIERS</button>
+                            <button onclick="window.location.href='procurement.php'">VENDOR PROCUREMENT</button>
                         </div>
                         <div>
                             <button>SCHEDULE ORDERS</button>
