@@ -58,8 +58,8 @@ CREATE TABLE IF NOT EXISTS items (
 
 
 
-
-Make sure you run this inside inventory not inventorry
+**
+Make sure you run this inside inventory not inventorry**
 
 CREATE TABLE suppliers ( supplier_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) NOT NULL, contract_id VARCHAR(50), item_supplied VARCHAR(100), risk_level VARCHAR(20), contact_email VARCHAR(100), tracking_method VARCHAR(50), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP );
 
