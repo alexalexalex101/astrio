@@ -38,40 +38,91 @@ $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
   <link rel="stylesheet" href="default.css">
   <style>
-    /* NASA-style table visuals */
-    table {
-      width: 65%;
-      margin: 1.5rem auto;
-      border-collapse: collapse;
-      background: rgba(12, 18, 44, 0.9);
-      box-shadow: 0 0 25px rgba(75, 83, 185, 0.7), inset 0 0 10px rgba(255,255,255,0.1);
-      border-radius: 12px;
-      overflow: hidden;
-      color: #e0e6ff;
-      font-family: "League Spartan", sans-serif;
-    }
-    th {
-      padding: 14px;
-      background: linear-gradient(90deg, #0e3b8f, #1c2143);
-      color: #ffffff;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-size: 1rem;
-      border-bottom: 2px solid #4b53b9;
-    }
-    td {
-      padding: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      font-size: 0.95rem;
-    }
-    tr:nth-child(even) { background-color: rgba(255,255,255,0.05); }
-    tbody tr:hover { background-color: rgba(75, 83, 185, 0.3); cursor: pointer; transition: background-color 0.3s ease; }
-    tr.dragging { opacity: 0.7; background: rgba(198, 115, 255, 0.3); box-shadow: 0 0 15px rgba(198,115,255,0.7); }
-    .form-container { width: 60%; margin: 2rem auto; background: rgba(12,18,44,0.9); padding: 1rem; border-radius: 12px; box-shadow: 0 0 20px rgba(75,83,185,0.7); color: #e0e6ff; }
-    .form-container input, .form-container select { width: 100%; padding: 8px; margin: 8px 0; border-radius: 6px; border: none; }
-    .form-container button { background: #0e3b8f; color: #fff; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; }
-    .form-container button:hover { background: #1c2143; }
-  </style>
+    
+  table {
+    width: 40%;
+    margin: 0.8rem auto;
+    border-collapse: collapse;
+    background: rgba(12, 18, 44, 0.9);
+    box-shadow: 0 0 15px rgba(75, 83, 185, 0.6), inset 0 0 6px rgba(255,255,255,0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    color: #e0e6ff;
+    font-family: "League Spartan", sans-serif;
+    font-size: 0.78rem;  
+  }
+
+  th {
+    padding: 8px;
+    background: linear-gradient(90deg, #0e3b8f, #1c2143);
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-size: 0.75rem;
+    border-bottom: 2px solid #4b53b9;
+  }
+
+  td {
+    padding: 7px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.77rem;
+  }
+
+  tr:nth-child(even) {
+    background-color: rgba(255,255,255,0.03);
+  }
+
+  tbody tr:hover {
+    background-color: rgba(75, 83, 185, 0.22);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  tr.dragging {
+    opacity: 0.75;
+    background: rgba(198, 115, 255, 0.22);
+    box-shadow: 0 0 10px rgba(198,115,255,0.6);
+  }
+
+ 
+  .form-container {
+    width: 42%;
+    margin: 1.2rem auto;
+    background: rgba(12,18,44,0.9);
+    padding: 0.7rem 0.9rem;
+    border-radius: 10px;
+    box-shadow: 0 0 14px rgba(75,83,185,0.55);
+    color: #e0e6ff;
+    font-size: 0.78rem;
+  }
+
+  .form-container input,
+  .form-container select {
+    width: 100%;
+    padding: 5px;
+    margin: 5px 0 8px 0;
+    border-radius: 5px;
+    border: none;
+    font-size: 0.78rem;
+  }
+
+  .form-container button {
+    background: #0e3b8f;
+    color: #fff;
+    padding: 7px 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.78rem;
+  }
+
+  .form-container button:hover {
+    background: #1c2143;
+  }
+</style>
+
+
+
 </head>
 <body>
   <a href="dashboard.php"><img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo"></a>
@@ -141,20 +192,44 @@ $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </div>
 
   <script>
-    const table = document.getElementById("contractsTable");
-    let draggedRow = null;
+  const table = document.getElementById("contractsTable");
+  let draggedRow = null;
 
-    table.querySelectorAll("tbody tr").forEach(row => {
-      row.addEventListener("dragstart", e => {
-        draggedRow = row;
-        row.classList.add("dragging");
-      });
-      row.addEventListener("dragend", e => {
-        draggedRow = null;
-        row.classList.remove("dragging");
-      });
-      row.addEventListener("dragover", e => {
-        e.preventDefault();
-        const tbody = table.querySelector("tbody");
-        const afterElement = getDragAfterElement(tbody, e.clientY);
-        if (afterElement == null)
+  table.querySelectorAll("tbody tr").forEach(row => {
+    row.addEventListener("dragstart", e => {
+      draggedRow = row;
+      row.classList.add("dragging");
+    });
+
+    row.addEventListener("dragend", e => {
+      draggedRow = null;
+      row.classList.remove("dragging");
+    });
+
+    row.addEventListener("dragover", e => {
+      e.preventDefault();
+      const tbody = table.querySelector("tbody");
+      const afterElement = getDragAfterElement(tbody, e.clientY);
+      if (afterElement == null) {
+        tbody.appendChild(draggedRow);
+      } else {
+        tbody.insertBefore(draggedRow, afterElement);
+      }
+    });
+  });
+
+  function getDragAfterElement(tbody, y) {
+    const rows = [...tbody.querySelectorAll("tr:not(.dragging)")];
+    return rows.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+</script>
+</body>
+</html>
