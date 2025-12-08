@@ -136,3 +136,28 @@ INSERT INTO items (hierarchy_id, name, type, expiry_date, calories, notes, rfid,
 (9, 'Tool Kit B', 'equipment', NULL, NULL, 'Rack_B_2 / CTB_004', '1071677363', NOW()),
 (8, 'Spare Part A', 'spare', NULL, NULL, 'Rack_B_2 / CTB_003', '3816690612', NOW()),
 (10, 'Waste Package A', 'waste', NULL, NULL, 'Waste Bay', '3820455092', NOW());
+
+## Incoming Table
+CREATE TABLE incoming (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    hierarchy_id INT DEFAULT 0,  -- node assignment
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) DEFAULT 'food',
+    location VARCHAR(255),
+    expiry_date DATE,
+    calories INT,
+    rfid VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+## Incoming Values
+INSERT INTO incoming (id, hierarchy_id, name, location, expiry_date, calories, rfid, type, created_at) VALUES
+(40, 6, 'Meal Pack C', 'Rack_C_1 / CTB_005', '2026-02-05', 480, 3824991122, 'food', '2025-12-07 23:55:00'),
+(41, 7, 'Meal Pack D', 'Rack_C_1 / CTB_006', '2026-02-12', 530, 1070441122, 'food', '2025-12-07 23:55:30'),
+(42, 6, 'Scientific Sample B', 'Rack_C_1 / CTB_005', NULL, NULL, 3811482233, 'scientific', '2025-12-07 23:56:00'),
+(43, 7, 'Medical Kit B', 'Rack_C_1 / CTB_006', '2026-07-01', NULL, 3821103344, 'medical', '2025-12-07 23:56:30'),
+(44, 8, 'Water Container C', 'Rack_D_2 / CTB_007', NULL, NULL, 3822914455, 'water', '2025-12-07 23:57:00'),
+(45, 9, 'Water Container D', 'Rack_D_2 / CTB_008', NULL, NULL, 3823955566, 'water', '2025-12-07 23:57:30'),
+(46, 8, 'Tool Kit C', 'Rack_D_2 / CTB_007', NULL, NULL, 3818806677, 'equipment', '2025-12-07 23:58:00'),
+(47, 9, 'Tool Kit D', 'Rack_D_2 / CTB_008', NULL, NULL, 1071688899, 'equipment', '2025-12-07 23:58:30'),
+(48, 8, 'Spare Part B', 'Rack_D_2 / CTB_007', NULL, NULL, 3816691223, 'spare', '2025-12-07 23:59:00'),
+(49, 10, 'Waste Package B', 'Waste Bay', NULL, NULL, 3820456000, 'waste', '2025-12-07 23:59:30');
