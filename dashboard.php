@@ -26,7 +26,7 @@
                         <div>
                             <button onclick="window.location.href='inventory.php'">INVENTORY</button>
                             <span id="space1"></span>
-                            <button>SUPPLY CHAIN MAP</button>
+                            <button onclick="window.location.href='suppliers.php'">SUPPLIERS</button>
                         </div>
                         <div>
                             <button>SCHEDULE ORDERS</button>
@@ -36,7 +36,7 @@
                         <div>
                             <button>LOGS</button>
                             <span id="space3"></span>
-                            <button>CONTRACTS</button>
+                            <button onclick="window.location.href='contracts.php'">CONTRACTS</button>
                         </div>
                     </div>
                 
