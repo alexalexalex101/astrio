@@ -31,7 +31,7 @@
                         <div>
                             <button>SCHEDULE ORDERS</button>
                             <span id="space2"></span>                            
-                            <button>WASTE</button>
+                            <button>VISUALIZATION</button>
                         </div>
                         <div>
                             <button>LOGS</button>
