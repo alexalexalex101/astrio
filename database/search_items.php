@@ -2,6 +2,16 @@
 require "db.php";
 header('Content-Type: application/json');
 
+$conn->query("
+  UPDATE items
+  SET type = 'waste',
+      hierarchy_id = (SELECT id FROM hierarchy WHERE name = 'Waste Bay' LIMIT 1),
+      notes = CONCAT(notes, ' | Expired and moved to Waste Bay')
+  WHERE type = 'food'
+    AND expiry_date IS NOT NULL
+    AND expiry_date < CURDATE()
+");
+
 $q = $_GET['q'] ?? '';
 $q = trim($q);
 
@@ -28,3 +38,4 @@ echo json_encode($items);
 
 $stmt->close();
 $conn->close();
+?>
