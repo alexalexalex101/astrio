@@ -28,6 +28,10 @@ $user = $_SESSION['user'];
             z-index: 2000;
         }
 
+.uppercase {
+    text-transform: uppercase;
+}
+
         .inv-sidebar {
             width: 280px;
             background: rgba(5,7,20,0.8);
@@ -84,10 +88,12 @@ $user = $_SESSION['user'];
     <!-- NEW CENTERED INVENTORY PANEL -->
     <div class="inventory-wrapper">
         <aside class="inv-sidebar">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
                 <strong class="hierarchytextformat">Hierarchy</strong>
+
                 <button id="refreshTree" title="Reload tree" style="background:none; border:none; color:#888; font-size:1.4rem;">↻</button>
             </div>
+            <div style="color:rgba(255,255,255,0.6); margin-bottom:12px;">Click on a node...</div>
             <input id="treeSearch" class="search-input" placeholder="Filter tree..." style="width:100%; margin-bottom:10px;"/>
             <ul id="tree" class="hierarchytextformat" aria-label="Hierarchy tree"></ul>
 
@@ -99,12 +105,9 @@ $user = $_SESSION['user'];
 
             <div id="createNodeArea" style="display:none; margin-top:12px;">
                 <input id="nodeName" placeholder="Node name" style="width:100%; padding:8px; margin-bottom:8px;">
-                <select id="nodeType" style="width:100%; padding:8px; margin-bottom:8px;">
-                    <option value="corporation">Corporation</option>
-                    <option value="large_team">Large Team</option>
-                    <option value="small_team">Small Team</option>
-                </select>
                 <button id="saveNode" style="width:100%; padding:10px; background:#2b79f6; border:none; border-radius:8px;">Save Node</button>
+                <button id="cancelcreateNodeBtn" style="width:100%; padding:10px; background:#2b79f6; border:none; border-radius:8px;margin-top: 8px;">Cancel</button>
+
             </div>
         </aside>
 
@@ -117,16 +120,8 @@ $user = $_SESSION['user'];
                 <div style="display:flex; gap:10px;">
                     <input id="globalSearch" class="search-input" placeholder="Search all items..." />
                     <button id="newItemBtn" style="padding:8px 16px; background:#4b53b9; border:none; border-radius:8px;">+ New Item</button>
-                </div>
-            </div>
+                    <button id="incomingItembtn" style="padding:8px 16px; background:#4b53b9; border:none; border-radius:8px;">Add Incoming</button>
 
-            <div id="itemsSection">
-                <table class="items-table" id="itemsTable" style="display:none;">
-                    <thead><tr><th>Name</th><th>Type</th><th>Expiry</th><th>Calories</th><th>Notes</th><th>RFID</th></tr></thead>
-                    <tbody id="itemsBody"></tbody>
-                </table>
-                <div id="noItems" style="color:rgba(255,255,255,0.6); text-align:center; padding:40px;">
-                    Select a node to view its items
                 </div>
             </div>
 
@@ -135,16 +130,16 @@ $user = $_SESSION['user'];
                 <h3 class="hierarchytextformat">Add New Item</h3>
                 <form id="itemForm">
                     <input type="hidden" id="form_hierarchy_id">
-                    <div style="display:flex; gap:12px; margin-bottom:12px;">
+                    <div style="display:flex; gap:12px; margin-bottom:12px;margin-top:12px;">
                         <input id="item_name" placeholder="Item name" style="flex:1;">
                         <select id="item_type">
-                            <option value="food">Food</option>
-                            <option value="equipment">Equipment</option>
-                            <option value="tool">Tool</option>
-                            <option value="waste">Waste</option>
+                            <option value="food" style="color:black;">Food</option>
+                            <option value="equipment" style="color:black;">Equipment</option>
+                            <option value="tool" style="color:black;">Tool</option>
+                            <option value="waste" style="color:black;">Waste</option>
                         </select>
                     </div>
-                    <textarea id="item_notes" placeholder="Notes / description" style="width:100%; height:80px;"></textarea>
+                    <textarea id="item_location" placeholder="Location" style="width:100%; height:80px;"></textarea>
                     <div style="display:flex; gap:12px; margin-top:12px;">
                         <input id="item_expiry" type="date">
                         <input id="item_calories" type="number" placeholder="Calories">
@@ -156,6 +151,33 @@ $user = $_SESSION['user'];
                     </div>
                 </form>
             </div>
+
+            <!-- Add Incoming Item Form -->
+            <div id="incomingItemFormArea" style="display:none; background:rgba(255,255,255,0.04); padding:20px; border-radius:12px; margin-top:20px;">
+                <h3 class="hierarchytextformat">Add Incoming Item</h3>
+                <div style="margin-bottom:12px;margin-top:12px;">
+                    <input id="incomingSearch" placeholder="Search incoming items..." style="width:100%; padding:8px;">
+                </div>
+                <div style="max-height:200px; overflow-y:auto;">
+                    <ul id="incomingItemsList" style="list-style:none; padding-left:0;"></ul>
+                </div>
+                <div style="margin-top:12px; display:flex; gap:12px;">
+                    <button id="addIncomingBtn" style="flex:1; padding:10px; background:#2b79f6; border:none; border-radius:8px;">Add to Node</button>
+                    <button type="button" id="cancelIncomingForm" style="flex:1; padding:10px; background:#444; border:none; border-radius:8px;">Cancel</button>
+                </div>
+            </div>
+
+
+            <div id="itemsSection">
+                <table class="items-table" id="itemsTable" style="display:none;">
+                    <thead><tr><th>Name</th><th>Type</th><th>Expiry</th><th>Calories</th><th>Location</th><th>RFID</th></tr></thead>
+                    <tbody id="itemsBody"></tbody>
+                </table>
+                <div id="noItems" style="color:rgba(255,255,255,0.6); text-align:center; padding:40px;">
+                    Select a node to view its items
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -173,6 +195,10 @@ let treeData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     loadTree();
+    document.getElementById('incomingItembtn').onclick = showIncomingItemForm;
+    document.getElementById('cancelIncomingForm').onclick = hideIncomingItemForm;
+    document.getElementById('addIncomingBtn').onclick = addSelectedIncomingItem;
+    document.getElementById('incomingSearch').addEventListener('input', debounce(searchIncomingItems, 300));
     document.getElementById('refreshTree').onclick = loadTree;
     document.getElementById('newItemBtn').onclick = showItemForm;
     document.getElementById('cancelForm').onclick = hideItemForm;
@@ -180,6 +206,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('createNodeBtn').onclick = () => {
         document.getElementById('createNodeArea').style.display = 'block';
     };
+    document.getElementById('cancelcreateNodeBtn').onclick = () => {
+        document.getElementById('createNodeArea').style.display = 'none';
+    };    
     document.getElementById('saveNode').onclick = createNode;
 
     document.getElementById('globalSearch').addEventListener('input', debounce(e => {
@@ -192,6 +221,111 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTree(filterTree(e.target.value.trim()));
     }, 200));
 });
+let scannewitem=false
+let scanBuffer = "";
+let lastKeyTime = Date.now();
+
+document.addEventListener("keydown", function(e) {
+    let currentTime = Date.now();
+    let timeDiff = currentTime - lastKeyTime;
+
+    // If time between keys is large, it's probably manual typing
+    if (timeDiff > 50) {
+        scanBuffer = "";
+    }
+
+    // Ignore control keys
+    if (e.key.length === 1) {
+        scanBuffer += e.key;
+    }
+
+    if (e.key === "Enter") {
+        if (scanBuffer.length > 3) {
+
+            // Put the scanned value INTO your global search box
+            if (scannewitem) {
+                let gs = document.getElementById("item_rfid");
+                gs.value = scanBuffer;
+            }
+            else {
+                let gs = document.getElementById("globalSearch");
+                gs.value = scanBuffer;
+                searchItems(scanBuffer);
+            }
+        }
+
+        scanBuffer = "";
+    }
+
+    lastKeyTime = currentTime;
+});
+
+function showIncomingItemForm() {
+    if (!currentNode) return alert('Select a node first.');
+    document.getElementById('incomingItemFormArea').style.display = 'block';
+    document.getElementById('incomingItemsList').innerHTML = '';
+    document.getElementById('incomingSearch').value = '';
+    searchIncomingItems();
+}
+
+function hideIncomingItemForm() {
+    document.getElementById('incomingItemFormArea').style.display = 'none';
+    document.getElementById('incomingItemsList').innerHTML = '';
+}
+
+function searchIncomingItems() {
+    const q = document.getElementById('incomingSearch').value.trim();
+    fetch('database/get_incoming_items.php?q=' + encodeURIComponent(q))
+    .then(r => r.json())
+    .then(items => {
+        const ul = document.getElementById('incomingItemsList');
+        ul.innerHTML = '';
+        if (!items || items.length === 0) {
+            ul.innerHTML = '<li style="color:#888;">No items found</li>';
+            return;
+        }
+        items.forEach(it => {
+            const li = document.createElement('li');
+            li.textContent = `${it.name} (${it.type})`;
+            li.dataset.id = it.id;
+            li.style.padding = '6px';
+            li.style.cursor = 'pointer';
+            li.onclick = () => li.classList.toggle('selected');
+            ul.appendChild(li);
+        });
+    });
+}
+
+function addSelectedIncomingItem() {
+    // get all selected <li>
+    const selectedLis = Array.from(document.querySelectorAll('#incomingItemsList li.selected'));
+    if (selectedLis.length === 0) return alert('Select at least one item');
+
+    // collect IDs
+    const ids = selectedLis.map(li => li.dataset.id);
+
+    const fd = new FormData();
+    fd.append('ids', ids.join(','));
+    fd.append('hierarchy_id', currentNode);
+
+    fetch('database/add_incoming_item_to_node.php', { method:'POST', body:fd })
+    .then(r => r.text())
+    .then(txt => {
+        if (txt.trim() === 'OK') {
+            alert('Items added to node');
+
+            // remove only the items that were added
+            selectedLis.forEach(li => li.remove());
+
+            loadNode(currentNode);
+        } else {
+            alert('Error: ' + txt);
+        }
+    })
+    .catch(err => alert('Error: ' + err));
+}
+
+
 
 function loadTree() {
     fetch(GET_TREE).then(r => r.json()).then(json => {
@@ -260,28 +394,124 @@ function loadNode(id) {
     .then(r => r.json())
     .then(items => {
         const body = document.getElementById('itemsBody');
+        const noItemsDiv = document.getElementById('noItems');
+        const table = document.getElementById('itemsTable');
+
+        // Reset
         body.innerHTML = '';
-        if (!items || items.length === 0) {
-            document.getElementById('itemsTable').style.display = 'none';
-            document.getElementById('noItems').textContent = 'No items for this node.';
+        table.style.display = 'none';
+        noItemsDiv.innerHTML = '';
+        noItemsDiv.style.display = 'block';
+
+        // Case 1: Has actual items → show normal table
+        if (items && items.length > 0) {
+            table.style.display = 'table';
+            items.forEach(it => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${escapeHtml(it.name)}</td>
+                    <td class="uppercase">${escapeHtml(it.type || '')}</td>
+                    <td>${it.expiry_date || ''}</td>
+                    <td>${it.calories || ''}</td>
+                    <td>${escapeHtml(it.location || '')}</td>
+                    <td>${escapeHtml(it.rfid || '')}</td>`;
+                body.appendChild(tr);
+            });
+            noItemsDiv.style.display = 'none';
             return;
         }
-        document.getElementById('noItems').textContent = '';
-        document.getElementById('itemsTable').style.display = 'table';
-        items.forEach(it => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${escapeHtml(it.name)}</td>
-                <td>${escapeHtml(it.type || '')}</td>
-                <td>${it.expiry_date || ''}</td>
-                <td>${it.calories || ''}</td>
-                <td>${escapeHtml(it.notes || '')}</td>
-                <td>${escapeHtml(it.rfid || '')}</td>`;
-            body.appendChild(tr);
-        });
+
+        // Case 2: No items → show child nodes as clickable cards (FLEXBOX VERSION)
+        const children = treeData.filter(n => String(n.parent_id) === String(id));
+
+        if (children.length > 0) {
+            noItemsDiv.innerHTML = `
+                <div style="text-align:center; padding:30px 20px 20px; color:rgba(255,255,255,0.7);">
+                    <div style="font-size:1.2rem; margin-bottom:8px;">No items in this node</div>
+                    <div style="font-size:0.95rem; opacity:0.8;">Select a location below to continue</div>
+                </div>
+            `;
+
+            const flexContainer = document.createElement('div');
+            flexContainer.style.cssText = `
+                display: flex;
+                flex-wrap: wrap;
+                gap: 18px;
+                padding: 0 20px 30px;
+                justify-content: center;
+                align-items: stretch;
+            `;
+
+            children.forEach(child => {
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    flex: 1 1 260px;
+                    max-width: 320px;
+                    background: rgba(255,255,255,0.06);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 12px;
+                    padding: 24px 20px;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.25s ease;
+                    font-family: "League Spartan", sans-serif;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                `;
+
+                card.onmouseover = () => {
+                    card.style.background = 'rgba(75,83,185,0.3)';
+                    card.style.transform = 'translateY(-4px)';
+                    card.style.boxShadow = '0 12px 30px rgba(75,83,185,0.4)';
+                };
+                card.onmouseout = () => {
+                    card.style.background = 'rgba(255,255,255,0.06)';
+                    card.style.transform = 'translateY(0)';
+                    card.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+                };
+
+                card.onclick = (e) => {
+                    e.stopPropagation();
+                    selectTreeNode(child.id);
+                };
+
+                card.innerHTML = `
+                    <div style="font-weight:700; font-size:1.25rem; margin-bottom:8px; color:#ffffff;">
+                        ${escapeHtml(child.name)}
+                    </div>
+                    <div style="font-size:0.9rem; color:rgba(255,255,255,0.6);">
+                        Click to enter →
+                    </div>
+                `;
+
+                flexContainer.appendChild(card);
+            });
+
+            noItemsDiv.appendChild(flexContainer);
+
+        } else {
+            // Truly empty
+            noItemsDiv.innerHTML = `
+                <div style="text-align:center; padding:60px 20px; color:rgba(255,255,255,0.5); font-size:1.1rem;">
+                    This location is completely empty
+                </div>
+            `;
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        document.getElementById('noItems').textContent = 'Error loading node';
     });
+} 
+
+// Helper: quick check if a node has items (optional — makes cards smarter)
+function childHasItems(nodeId) {
+    // You can improve this later with a small backend call if needed
+    // For now, just assume yes if it has children of its own
+    return treeData.some(n => String(n.parent_id) === String(nodeId));
 }
 
 function showItemForm() {
+    scannewitem = true
+
     if (!currentNode) {
         alert('Select a node first.');
         return;
@@ -297,6 +527,7 @@ function showItemForm() {
 }
 
 function hideItemForm() {
+    scannewitem = false
     document.getElementById('itemFormArea').style.display = 'none';
     document.getElementById('itemForm').reset();
 }
@@ -306,8 +537,8 @@ function submitItemForm(e) {
     const fd = new FormData();
     fd.append('name', document.getElementById('item_name').value);
     fd.append('hierarchy_id', document.getElementById('form_hierarchy_id').value);
-    fd.append('notes', document.getElementById('item_notes').value);
-    fd.append('expiry', document.getElementById('item_expiry').value);
+    fd.append('location', document.getElementById('item_location').value);
+    fd.append('expiry_date', document.getElementById('item_expiry').value);
     fd.append('calories', document.getElementById('item_calories').value);
     fd.append('rfid', document.getElementById('item_rfid').value);
     fd.append('type', document.getElementById('item_type').value);
@@ -327,12 +558,10 @@ function submitItemForm(e) {
 
 function createNode(e) {
     const name = document.getElementById('nodeName').value.trim();
-    const type = document.getElementById('nodeType').value;
     if (!name) return alert('Enter a node name');
     // use parent = currentNode if set
     const fd = new FormData();
     fd.append('name', name);
-    fd.append('type', type);
     fd.append('parent_id', currentNode ? currentNode : 0);
 
     fetch(CREATE_NODE, { method:'POST', body:fd })
@@ -366,10 +595,10 @@ function searchItems(q) {
         items.forEach(it => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${escapeHtml(it.name)}</td>
-                <td>${escapeHtml(it.type || '')}</td>
+                <td class="uppercase">${escapeHtml(it.type || '')}</td>
                 <td>${it.expiry_date || ''}</td>
                 <td>${it.calories || ''}</td>
-                <td>${escapeHtml(it.notes || '')}</td>
+                <td>${escapeHtml(it.location || '')}</td>
                 <td>${escapeHtml(it.rfid || '')}</td>`;
             body.appendChild(tr);
         });

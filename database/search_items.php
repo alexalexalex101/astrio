@@ -10,7 +10,7 @@ if ($q === '') {
     exit;
 }
 
-$stmt = $conn->prepare("SELECT id, name, type, expiry_date, calories, notes, rfid 
+$stmt = $conn->prepare("SELECT id, name, type, expiry_date, calories, location, rfid 
                         FROM items 
                         WHERE name LIKE ? OR rfid LIKE ? 
                         ORDER BY id ASC");

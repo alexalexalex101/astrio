@@ -21,6 +21,9 @@ html, body {
   src: url('fonts/nasalization\ rg.ttf');
 }
 
+.uppercase {
+    text-transform: uppercase;
+}
 
 .topnav {
     display: flex;
@@ -290,3 +293,19 @@ form::after {
     color: red;
     font-weight: bold;
 }
+
+#incomingItemsList {
+    color: white;
+}
+
+#incomingItemsList li.selected {
+    background: rgba(75, 83, 185, 0.35);
+    color: #fff;
+}
+
+#incomingItemsList li:hover{
+    background: rgba(107, 112, 172, 0.35);
+    color: #fff;
+}
+
+/* Make all table cells the same height */
