@@ -105,7 +105,7 @@ VALUES
 (6, 'Consumables Supply – KSC Vendors', '2025-01-01', '2028-01-01', 'Active');
 
 
-#Make sure you run this in inventoryy to populate the items and hiearchy tables with data
+# Make sure you run this in inventoryy to populate the items and hiearchy tables with data
 
 -- 🔄 Reset
 DELETE FROM items;
