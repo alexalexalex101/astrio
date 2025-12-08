@@ -122,7 +122,7 @@ $user = $_SESSION['user'];
 
             <div id="itemsSection">
                 <table class="items-table" id="itemsTable" style="display:none;">
-                    <thead><tr><th>Name</th><th>Type</th><th>Expiry</th><th>Calories</th><th>Notes</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Type</th><th>Expiry</th><th>Calories</th><th>Notes</th><th>RFID</th></tr></thead>
                     <tbody id="itemsBody"></tbody>
                 </table>
                 <div id="noItems" style="color:rgba(255,255,255,0.6); text-align:center; padding:40px;">
@@ -271,10 +271,11 @@ function loadNode(id) {
         items.forEach(it => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${escapeHtml(it.name)}</td>
-                            <td>${escapeHtml(it.type || '')}</td>
-                            <td>${it.expiry_date || ''}</td>
-                            <td>${it.calories || ''}</td>
-                            <td>${escapeHtml(it.notes || '')}</td>`;
+                <td>${escapeHtml(it.type || '')}</td>
+                <td>${it.expiry_date || ''}</td>
+                <td>${it.calories || ''}</td>
+                <td>${escapeHtml(it.notes || '')}</td>
+                <td>${escapeHtml(it.rfid || '')}</td>`;
             body.appendChild(tr);
         });
     });
@@ -365,10 +366,11 @@ function searchItems(q) {
         items.forEach(it => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${escapeHtml(it.name)}</td>
-                            <td>${escapeHtml(it.type || '')}</td>
-                            <td>${it.expiry_date || ''}</td>
-                            <td>${it.calories || ''}</td>
-                            <td>${escapeHtml(it.notes || '')}</td>`;
+                <td>${escapeHtml(it.type || '')}</td>
+                <td>${it.expiry_date || ''}</td>
+                <td>${it.calories || ''}</td>
+                <td>${escapeHtml(it.notes || '')}</td>
+                <td>${escapeHtml(it.rfid || '')}</td>`;
             body.appendChild(tr);
         });
     });
