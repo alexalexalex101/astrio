@@ -168,15 +168,23 @@ $user = $_SESSION['user'];
             </div>
 
 
-            <div id="itemsSection">
-                <table class="items-table" id="itemsTable" style="display:none;">
-                    <thead><tr><th>Name</th><th>Type</th><th>Expiry</th><th>Calories</th><th>Location</th><th>RFID</th></tr></thead>
-                    <tbody id="itemsBody"></tbody>
-                </table>
-                <div id="noItems" style="color:rgba(255,255,255,0.6); text-align:center; padding:40px;">
-                    Select a node to view its items
-                </div>
-            </div>
+<!-- Node View (child nodes + items) -->
+<div id="nodeView">
+    <div id="noItems"></div>
+    <table class="items-table" id="itemsTable" style="display:none;">
+        <thead><tr><th>Name</th><th>Type</th><th>Expiry</th><th>Calories</th><th>Location</th><th>RFID</th></tr></thead>
+        <tbody id="itemsBody"></tbody>
+    </table>
+</div>
+
+<!-- Search Results View -->
+<div id="searchView" style="display:none;">
+    <table class="items-table">
+        <thead><tr><th>Name</th><th>Type</th><th>Expiry</th><th>Calories</th><th>Location</th><th>RFID</th></tr></thead>
+        <tbody id="searchResults"></tbody>
+    </table>
+</div>
+
 
         </main>
     </div>
@@ -221,7 +229,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTree(filterTree(e.target.value.trim()));
     }, 200));
 });
-let scannewitem=false
+let scannewitem = false;
+let scannerSequence = true;
+let scanningIncoming = false;   // NEW
 let scanBuffer = "";
 let lastKeyTime = Date.now();
 
@@ -229,49 +239,142 @@ document.addEventListener("keydown", function(e) {
     let currentTime = Date.now();
     let timeDiff = currentTime - lastKeyTime;
 
-    // If time between keys is large, it's probably manual typing
+    // Reset buffer if too slow (human typing)
     if (timeDiff > 50) {
         scanBuffer = "";
+        scannerSequence = true; // new sequence
+    } else {
+        // check if THIS character was typed too slowly
+        if (timeDiff > 20) {
+            scannerSequence = false; // not a true scanner sequence
+        }
     }
 
-    // Ignore control keys
     if (e.key.length === 1) {
         scanBuffer += e.key;
     }
 
     if (e.key === "Enter") {
-        if (scanBuffer.length > 3) {
+        const isScanner = (scannerSequence && scanBuffer.length > 3);
 
-            // Put the scanned value INTO your global search box
-            if (scannewitem) {
-                let gs = document.getElementById("item_rfid");
-                gs.value = scanBuffer;
-            }
-            else {
-                let gs = document.getElementById("globalSearch");
-                gs.value = scanBuffer;
+        if (isScanner) {
+            if (scanningIncoming) {
+                autoAddIncomingByRFID(scanBuffer);
+            } else if (scannewitem) {
+                document.getElementById("item_rfid").value = scanBuffer;
+            } else {
+                document.getElementById("globalSearch").value = scanBuffer;
                 searchItems(scanBuffer);
             }
         }
 
+        // reset
         scanBuffer = "";
+        scannerSequence = true;
     }
 
     lastKeyTime = currentTime;
 });
 
+
+function autoAddIncomingByRFID(rfid) {
+    fetch('database/get_incoming_items.php?q=' + encodeURIComponent(rfid))
+    .then(r => r.json())
+    .then(items => {
+
+        // No matches
+        if (!items || items.length === 0) {
+            showTemporaryMessage("❌ No match for: " + rfid, "red");
+            clearIncomingScan();
+            return;
+        }
+
+        // Too many matches
+        if (items.length > 1) {
+            showTemporaryMessage("⚠️ Multiple matches. Manual select required.", "orange");
+            clearIncomingScan();
+            return;
+        }
+
+        // Exactly one match → auto-add it
+        const item = items[0];
+        const fd = new FormData();
+        fd.append('ids', item.id);
+        fd.append('hierarchy_id', currentNode);
+
+        fetch('database/add_incoming_item_to_node.php', { method: 'POST', body: fd })
+        .then(r => r.text())
+        .then(txt => {
+            if (txt.trim() === 'OK') {
+
+                // SUCCESS feedback
+                showTemporaryMessage("✔️ Added: " + item.name, "green");
+
+                // Reset UI for next scan
+                clearIncomingScan();
+
+                // Refresh lists
+                loadNode(currentNode);
+                searchIncomingItems();
+            } else {
+                showTemporaryMessage("❌ Error: " + txt, "red");
+                clearIncomingScan();
+            }
+        });
+    });
+}
+
+function clearIncomingScan() {
+    document.getElementById('incomingSearch').value = "";
+    scanBuffer = "";
+}
+
+function showTemporaryMessage(msg, color="white") {
+    let box = document.createElement("div");
+    box.textContent = msg;
+    box.style.position = "fixed";
+    box.style.top = "20px";
+    box.style.right = "20px";
+    box.style.padding = "12px 18px";
+    box.style.background = "rgba(0,0,0,0.75)";
+    box.style.border = "1px solid rgba(255,255,255,0.2)";
+    box.style.color = color;
+    box.style.fontFamily = "League Spartan, sans-serif";
+    box.style.fontSize = "1rem";
+    box.style.borderRadius = "8px";
+    box.style.zIndex = 9999;
+    box.style.opacity = "1";
+    box.style.transition = "opacity 0.5s ease";
+
+    document.body.appendChild(box);
+
+    setTimeout(() => { box.style.opacity = "0"; }, 1200);
+    setTimeout(() => { box.remove(); }, 1800);
+}
+
+
 function showIncomingItemForm() {
     if (!currentNode) return alert('Select a node first.');
+
+    scanningIncoming = true;   // ENABLE SCAN MODE
+    scannewitem = false;       // ensure only one mode is active
+
     document.getElementById('incomingItemFormArea').style.display = 'block';
     document.getElementById('incomingItemsList').innerHTML = '';
     document.getElementById('incomingSearch').value = '';
+
+    document.getElementById('incomingSearch').focus();
+
     searchIncomingItems();
 }
 
+
 function hideIncomingItemForm() {
+    scanningIncoming = false;   // disable scan mode
     document.getElementById('incomingItemFormArea').style.display = 'none';
     document.getElementById('incomingItemsList').innerHTML = '';
 }
+
 
 function searchIncomingItems() {
     const q = document.getElementById('incomingSearch').value.trim();
@@ -328,10 +431,16 @@ function addSelectedIncomingItem() {
 
 
 function loadTree() {
-    fetch(GET_TREE).then(r => r.json()).then(json => {
-        treeData = json;
-        renderTree(treeData);
-    }).catch(err => console.error(err));
+    return fetch(GET_TREE)
+        .then(r => r.json())
+        .then(json => {
+            treeData = json;
+            renderTree(treeData);
+        })
+        .catch(err => {
+            console.error('Failed to load tree:', err);
+            alert('Could not load hierarchy tree');
+        });
 }
 
 function filterTree(q) {
@@ -570,7 +679,7 @@ function createNode(e) {
         if (txt.trim() === 'OK') {
             document.getElementById('createNodeArea').style.display = 'none';
             document.getElementById('nodeName').value = '';
-            loadTree();
+            loadTree().then(() => { if (currentNode) loadNode(currentNode); });
         } else {
             alert('Error: ' + txt);
         }
@@ -579,22 +688,30 @@ function createNode(e) {
 }
 
 function searchItems(q) {
+
+    // 🔥 Add this: disable the node view while searching
+    document.getElementById('noItems').style.display = 'none';
+
     fetch(SEARCH_ITEMS + '?q=' + encodeURIComponent(q))
     .then(r => r.json())
     .then(items => {
-        // display results in the items table
         const body = document.getElementById('itemsBody');
         body.innerHTML = '';
+
         if (!items || items.length === 0) {
             document.getElementById('itemsTable').style.display = 'none';
             document.getElementById('noItems').textContent = 'No search results';
+            document.getElementById('noItems').style.display = 'block';
             return;
         }
-        document.getElementById('noItems').textContent = '';
+
         document.getElementById('itemsTable').style.display = 'table';
+        document.getElementById('noItems').style.display = 'none';
+
         items.forEach(it => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${escapeHtml(it.name)}</td>
+            tr.innerHTML = `
+                <td>${escapeHtml(it.name)}</td>
                 <td class="uppercase">${escapeHtml(it.type || '')}</td>
                 <td>${it.expiry_date || ''}</td>
                 <td>${it.calories || ''}</td>
@@ -604,6 +721,7 @@ function searchItems(q) {
         });
     });
 }
+
 
 // small utilities
 function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
