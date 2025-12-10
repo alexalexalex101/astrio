@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     hierarchy_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
-    notes TEXT,
+    location TEXT,
     expiry_date DATE NULL,
     calories INT NULL,
     rfid VARCHAR(128) NULL,
@@ -49,17 +49,6 @@ CREATE TABLE IF NOT EXISTS items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (hierarchy_id) REFERENCES hierarchy(id) ON DELETE CASCADE
 );
-
-### Optional: Populate a few starter nodes:
-
-
-INSERT INTO hierarchy (parent_id, name, type) VALUES
-(NULL, 'NASA Corporation', 'corporation'),
-(1, 'Gateway Mission', 'large_team'),
-(2, 'Deep Space Logistics Module', 'small_team'),
-(2, 'Kennedy Space Center', 'small_team');
-
-
 
 
 # Make sure you run this in inventory not inventorry this is for suppliers and contracts db setup
@@ -115,7 +104,7 @@ DELETE FROM hierarchy;
 INSERT INTO hierarchy (id, parent_id, name, created_at) VALUES (1, NULL, 'NASA Corporation', NOW()), (2, 1, 'Gateway Mission', NOW()), (3, 2, 'Deep Space Logistics Module', NOW()), (4, 3, 'Rack_A_1', NOW()), (5, 3, 'Rack_B_2', NOW()), (6, 4, 'CTB_001', NOW()), (7, 4, 'CTB_002', NOW()), (8, 5, 'CTB_003', NOW()), (9, 5, 'CTB_004', NOW()), (10, 3, 'Waste Bay', NOW());
 
 ## Items (RFIDs evenly distributed, realistic categories) 
-INSERT INTO items (hierarchy_id, name, type, expiry_date, calories, notes, rfid, created_at) VALUES (6, 'Meal Pack A', 'food', '2026-01-15', 500, 'Rack_A_1 / CTB_001', '3824983316', NOW()), (7, 'Meal Pack B', 'food', '2026-01-20', 520, 'Rack_A_1 / CTB_002', '1070336339', NOW()), (6, 'Scientific Sample A', 'scientific', NULL, NULL, 'Rack_A_1 / CTB_001', '3811479572', NOW()), (7, 'Medical Kit A', 'medical', '2026-06-01', NULL, 'Rack_A_1 / CTB_002', '3821091716', NOW()), (8, 'Water Container A', 'water', NULL, NULL, 'Rack_B_2 / CTB_003', '3822908996', NOW()), (9, 'Water Container B', 'water', NULL, NULL, 'Rack_B_2 / CTB_004', '3823946900', NOW()), (8, 'Tool Kit A', 'equipment', NULL, NULL, 'Rack_B_2 / CTB_003', '3818797508', NOW()), (9, 'Tool Kit B', 'equipment', NULL, NULL, 'Rack_B_2 / CTB_004', '1071677363', NOW()), (8, 'Spare Part A', 'spare', NULL, NULL, 'Rack_B_2 / CTB_003', '3816690612', NOW()), (10, 'Waste Package A', 'waste', NULL, NULL, 'Waste Bay', '3820455092', NOW());
+INSERT INTO items (hierarchy_id, name, type, expiry_date, calories, location, rfid, created_at) VALUES (6, 'Meal Pack A', 'food', '2026-01-15', 500, 'Rack_A_1 / CTB_001', '3824983316', NOW()), (7, 'Meal Pack B', 'food', '2026-01-20', 520, 'Rack_A_1 / CTB_002', '1070336339', NOW()), (6, 'Scientific Sample A', 'scientific', NULL, NULL, 'Rack_A_1 / CTB_001', '3811479572', NOW()), (7, 'Medical Kit A', 'medical', '2026-06-01', NULL, 'Rack_A_1 / CTB_002', '3821091716', NOW()), (8, 'Water Container A', 'water', NULL, NULL, 'Rack_B_2 / CTB_003', '3822908996', NOW()), (9, 'Water Container B', 'water', NULL, NULL, 'Rack_B_2 / CTB_004', '3823946900', NOW()), (8, 'Tool Kit A', 'equipment', NULL, NULL, 'Rack_B_2 / CTB_003', '3818797508', NOW()), (9, 'Tool Kit B', 'equipment', NULL, NULL, 'Rack_B_2 / CTB_004', '1071677363', NOW()), (8, 'Spare Part A', 'spare', NULL, NULL, 'Rack_B_2 / CTB_003', '3816690612', NOW()), (10, 'Waste Package A', 'waste', NULL, NULL, 'Waste Bay', '3820455092', NOW());
 
 
 ## Incoming Table
