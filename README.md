@@ -110,7 +110,7 @@ INSERT INTO items (hierarchy_id, name, type, expiry_date, calories, location, rf
 ## Incoming Table
 CREATE TABLE incoming (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    hierarchy_id INT DEFAULT 0,  -- node assignment
+    hierarchy_id INT DEFAULT 0,
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50) DEFAULT 'food',
     location VARCHAR(255),
