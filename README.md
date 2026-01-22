@@ -87,7 +87,7 @@ VALUES
 
 CREATE TABLE contracts (
     contract_id INT AUTO_INCREMENT PRIMARY KEY,
-    supplier_id INT NULL,
+    supplier_id INT NOT NULL,
     contract_name VARCHAR(100),
     start_date DATE,
     end_date DATE,
