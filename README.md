@@ -53,20 +53,15 @@ CREATE TABLE IF NOT EXISTS items (
 
 # Make sure you run this in inventory not inventorry this is for suppliers and contracts db setup
 
-# Make sure you run this inside the "inventory" database
 USE inventory;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Reset contracts first (FK dependency)
 DROP TABLE IF EXISTS contracts;
-
--- Reset suppliers
 DROP TABLE IF EXISTS suppliers;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- Recreate suppliers table (REAL NASA item suppliers only)
 CREATE TABLE suppliers (
     supplier_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -77,7 +72,6 @@ CREATE TABLE suppliers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert accurate NASA suppliers of PHYSICAL ITEMS
 INSERT INTO suppliers (name, item_supplied, risk_level, contact_email, tracking_method)
 VALUES
 ('Collins Aerospace', 'Avionics and life support hardware', 'High', 'support@collinsaerospace.com', 'RFID/Barcode'),
@@ -89,9 +83,8 @@ VALUES
 ('Teledyne Brown Engineering', 'ISS science racks and hardware', 'High', 'info@teledyne.com', 'RFID'),
 ('Paragon Space Development Corp.', 'Life support consumables and filters', 'Medium', 'info@paragonsdc.com', 'RFID'),
 ('UTC Aerospace Systems', 'Spacecraft components and assemblies', 'Medium', 'contact@utcaerospacesystems.com', 'Barcode'),
-('NASA KSC Vendors', 'Food, water, and consumables', 'Critical', 'vendors@ksc.nasa.gov', 'RFID/Barcode');
+('Thermo Fisher Scientific', 'Medical kits and scientific instruments', 'High', 'support@thermofisher.com', 'RFID');
 
--- Recreate contracts table (now includes contract_value)
 CREATE TABLE contracts (
     contract_id INT AUTO_INCREMENT PRIMARY KEY,
     supplier_id INT NULL,
@@ -103,17 +96,18 @@ CREATE TABLE contracts (
     FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id)
 );
 
--- Insert only the most important, highest-value NASA contracts
+DELETE FROM contracts;
+ALTER TABLE contracts AUTO_INCREMENT = 1;
+
 INSERT INTO contracts (supplier_id, contract_name, start_date, end_date, status, contract_value)
 VALUES
-(NULL, 'NEST - NASA End-User Services & Technologies', '2019-01-01', '2029-08-31', 'Active', 2900000000),
-(NULL, 'AEGIS - Advanced Enterprise Global IT Solutions', '2021-01-01', '2032-04-30', 'Active', 2500000000),
-(NULL, 'Human Health & Performance Contract', '2015-01-01', '2025-10-31', 'Active', 1400000000),
-(NULL, 'SACOM - Consolidated Operations & Maintenance', '2015-01-01', '2025-06-30', 'Active', 1300000000),
-(NULL, 'BOSS - Base Operations & Spaceport Services', '2018-01-01', '2025-03-21', 'Active', 675000000),
-(NULL, 'ATOM-5 - Aerospace Testing & Facilities O&M', '2022-01-01', '2027-06-21', 'Active', 298000000),
-(NULL, 'SAMDA - Support for Atmospheres, Modeling, and Data Assimilation', '2017-01-01', '2025-05-31', 'Active', 298000000);
-
+(1, 'NEST - NASA End-User Services & Technologies', '2019-01-01', '2029-08-31', 'Active', 2900000000),
+(2, 'AEGIS - Advanced Enterprise Global IT Solutions', '2021-01-01', '2032-04-30', 'Active', 2500000000),
+(3, 'Human Health & Performance Contract', '2015-01-01', '2025-10-31', 'Active', 1400000000),
+(4, 'SACOM - Consolidated Operations & Maintenance', '2015-01-01', '2025-06-30', 'Active', 1300000000),
+(4, 'BOSS - Base Operations & Spaceport Services', '2018-01-01', '2025-03-21', 'Active', 675000000),
+(6, 'ATOM-5 - Aerospace Testing & Facilities O&M', '2022-01-01', '2027-06-21', 'Active', 298000000),
+(7, 'SAMDA - Support for Atmospheres, Modeling, and Data Assimilation', '2017-01-01', '2025-05-31', 'Active', 298000000);
 
 # Make sure you run this in inventoryy to populate the items and hiearchy tables with data
 
