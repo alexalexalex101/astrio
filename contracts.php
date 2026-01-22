@@ -2,6 +2,20 @@
 session_start();
 include("database/connection.php");
 
+/* ------------------------------
+   CONTRACT VALUE FORMATTER
+------------------------------ */
+function formatContractValue($value) {
+    if ($value >= 1000000000) {
+        return '$' . round($value / 1000000000, 2) . 'B';
+    } elseif ($value >= 1000000) {
+        return '$' . round($value / 1000000, 2) . 'M';
+    } elseif ($value >= 1000) {
+        return '$' . round($value / 1000, 2) . 'K';
+    }
+    return '$' . $value;
+}
+
 // Handle Add Contract form
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
     $stmt = $conn->prepare("INSERT INTO contracts (supplier_id, contract_name, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)");
@@ -26,7 +40,8 @@ $suppliers = $suppliersStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch contracts with supplier names
 $stmt = $conn->query("
-  SELECT c.contract_id, c.contract_name, c.start_date, c.end_date, c.status, s.name AS supplier_name
+  SELECT c.contract_id, c.contract_name, c.start_date, c.end_date, c.status,
+       c.contract_value, s.name AS supplier_name
   FROM contracts c
   JOIN suppliers s ON c.supplier_id = s.supplier_id
   ORDER BY c.start_date ASC
@@ -184,14 +199,20 @@ $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <div id="contractsContainer">
         <table id="contractsTable">
           <thead>
-            <tr>
-              <th>Contract Name</th>
-              <th>Supplier</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
+            <tr draggable="true">
+    <td><?php echo htmlspecialchars($row['contract_name']); ?></td>
+    <td><?php echo htmlspecialchars($row['supplier_name']); ?></td>
+    <td><?php echo htmlspecialchars($row['start_date']); ?></td>
+    <td><?php echo htmlspecialchars($row['end_date']); ?></td>
+    <td style="color:<?php echo $row['status']=='Active'?'#0f0':($row['status']=='Pending'?'#ff0':'#f00'); ?>">
+        <?php echo htmlspecialchars($row['status']); ?>
+    </td>
+
+    <!-- ⭐ THIS IS CHANGE #3 -->
+    <td><?php echo formatContractValue($row['contract_value']); ?></td>
+
+    <td><a href="contracts.php?delete=<?php echo $row['contract_id']; ?>" style="color:red;">Delete</a></td>
+</tr>
           </thead>
           <tbody>
             <?php if (empty($contracts)): ?>
@@ -282,3 +303,4 @@ $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </script>
 </body>
 </html>
+
