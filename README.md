@@ -53,6 +53,20 @@ CREATE TABLE IF NOT EXISTS items (
 
 # Make sure you run this in inventory not inventorry this is for suppliers and contracts db setup
 
+# Make sure you run this inside the "inventory" database
+USE inventory;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Reset contracts first (FK dependency)
+DROP TABLE IF EXISTS contracts;
+
+-- Reset suppliers
+DROP TABLE IF EXISTS suppliers;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Recreate suppliers table (REAL NASA item suppliers only)
 CREATE TABLE suppliers (
     supplier_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -63,35 +77,42 @@ CREATE TABLE suppliers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO suppliers
-(name, item_supplied, risk_level, contact_email, tracking_method)
+-- Insert accurate NASA suppliers of PHYSICAL ITEMS
+INSERT INTO suppliers (name, item_supplied, risk_level, contact_email, tracking_method)
 VALUES
-('SpaceX', 'Cargo delivery (Dragon XL)', 'Critical', 'contact@spacex.com', 'RFID/Barcode'),
-('Boeing', 'Spacecraft components', 'High', 'support@boeing.com', 'Barcode'),
-('Lockheed Martin', 'Crew module hardware', 'Critical', 'info@lmco.com', 'RFID'),
-('Northrop Grumman', 'Pressurized cargo modules', 'Critical', 'cargo@ngc.com', 'RFID/Barcode'),
-('Sierra Nevada Corp.', 'Scientific payloads', 'Medium', 'science@sncorp.com', 'Barcode'),
-('NASA KSC Vendors', 'Food, water, consumables', 'Critical', 'vendors@ksc.nasa.gov', 'RFID/Barcode');
+('Collins Aerospace', 'Avionics and life support hardware', 'High', 'support@collinsaerospace.com', 'RFID/Barcode'),
+('Honeywell Aerospace', 'Environmental control systems and sensors', 'Medium', 'contact@honeywell.com', 'Barcode'),
+('Lockheed Martin', 'Orion spacecraft components', 'Critical', 'info@lmco.com', 'RFID'),
+('Boeing', 'SLS structural components', 'High', 'support@boeing.com', 'Barcode'),
+('Axiom Space', 'Habitat module hardware', 'High', 'info@axiomspace.com', 'RFID'),
+('Sierra Nevada Corp.', 'Scientific payload hardware', 'Medium', 'science@sncorp.com', 'Barcode'),
+('Teledyne Brown Engineering', 'ISS science racks and hardware', 'High', 'info@teledyne.com', 'RFID'),
+('Paragon Space Development Corp.', 'Life support consumables and filters', 'Medium', 'info@paragonsdc.com', 'RFID'),
+('UTC Aerospace Systems', 'Spacecraft components and assemblies', 'Medium', 'contact@utcaerospacesystems.com', 'Barcode'),
+('NASA KSC Vendors', 'Food, water, and consumables', 'Critical', 'vendors@ksc.nasa.gov', 'RFID/Barcode');
 
+-- Recreate contracts table (now includes contract_value)
 CREATE TABLE contracts (
     contract_id INT AUTO_INCREMENT PRIMARY KEY,
-    supplier_id INT NOT NULL,
+    supplier_id INT NULL,
     contract_name VARCHAR(100),
     start_date DATE,
     end_date DATE,
     status VARCHAR(20),
+    contract_value BIGINT,
     FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id)
 );
 
-INSERT INTO contracts
-(supplier_id, contract_name, start_date, end_date, status)
+-- Insert only the most important, highest-value NASA contracts
+INSERT INTO contracts (supplier_id, contract_name, start_date, end_date, status, contract_value)
 VALUES
-(1, 'Gateway Logistics Services', '2025-01-01', '2028-01-01', 'Active'),
-(2, 'Artemis Program Support – SLS', '2024-08-01', '2027-08-01', 'Active'),
-(3, 'Orion Crew Module Contract', '2024-08-01', '2027-08-01', 'Active'),
-(4, 'Cygnus Gateway Cargo Contract', '2025-03-01', '2028-03-01', 'Active'),
-(5, 'Scientific Payload Partnership', '2025-02-01', '2028-02-01', 'Pending'),
-(6, 'Consumables Supply – KSC Vendors', '2025-01-01', '2028-01-01', 'Active');
+(NULL, 'NEST - NASA End-User Services & Technologies', '2019-01-01', '2029-08-31', 'Active', 2900000000),
+(NULL, 'AEGIS - Advanced Enterprise Global IT Solutions', '2021-01-01', '2032-04-30', 'Active', 2500000000),
+(NULL, 'Human Health & Performance Contract', '2015-01-01', '2025-10-31', 'Active', 1400000000),
+(NULL, 'SACOM - Consolidated Operations & Maintenance', '2015-01-01', '2025-06-30', 'Active', 1300000000),
+(NULL, 'BOSS - Base Operations & Spaceport Services', '2018-01-01', '2025-03-21', 'Active', 675000000),
+(NULL, 'ATOM-5 - Aerospace Testing & Facilities O&M', '2022-01-01', '2027-06-21', 'Active', 298000000),
+(NULL, 'SAMDA - Support for Atmospheres, Modeling, and Data Assimilation', '2017-01-01', '2025-05-31', 'Active', 298000000);
 
 
 # Make sure you run this in inventoryy to populate the items and hiearchy tables with data
