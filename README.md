@@ -49,7 +49,9 @@ CREATE TABLE IF NOT EXISTS items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (hierarchy_id) REFERENCES hierarchy(id) ON DELETE CASCADE
 );
-
+ALTER TABLE items
+  ADD COLUMN remaining_percent TINYINT UNSIGNED NOT NULL DEFAULT 100,
+  ADD COLUMN volume_liters DECIMAL(5,2) DEFAULT NULL;
 
 # Make sure you run this in inventory not inventorry this is for suppliers and contracts db setup
 
