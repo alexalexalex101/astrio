@@ -12,7 +12,7 @@ if ($id <= 0) {
 
 // Only SELECT — no updates, no side effects
 $stmt = $conn->prepare("
-    SELECT id, name, location, expiry_date, calories, rfid, type 
+    SELECT id, name, location, expiry_date, calories, rfid, type, remaining_percent 
     FROM items 
     WHERE hierarchy_id = ? 
     ORDER BY name

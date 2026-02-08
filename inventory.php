@@ -2,6 +2,7 @@
 session_start();
 if(!isset($_SESSION['user'])) header('location: nasalogin.php');
 $user = $_SESSION['user']; 
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,6 +12,180 @@ $user = $_SESSION['user'];
     <link rel="stylesheet" href="default.css">
     <link rel="stylesheet" href="https://use.typekit.net/pen4uct.css">
     <style>
+        /* COLLAPSIBLE TREE */
+            #tree {
+                list-style: none;
+                padding-left: 10px;
+                margin: 0;
+            }
+
+            #tree li {
+                margin: 3px 0;
+            }
+
+            .tree-node {
+                cursor: pointer;
+                padding: 3px 0;
+                font-size: 13px;
+                color: #fff;
+            }
+
+            .tree-children.collapsed {
+                display: none;
+            }
+            .location-cell {
+                max-width: 260px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 12px;
+            }
+
+            .percent-bar {
+                width: 70px;
+                height: 8px;
+                background: #333;
+                border-radius: 4px;
+                display: inline-block;
+                vertical-align: middle;
+            }
+            .percent-fill {
+                height: 100%;
+                background: #4caf50;
+                border-radius: 4px;
+            }
+            .delete-btn {
+                background: #c62828;
+                color: #fff;
+                border: none;
+                padding: 4px 8px;
+                border-radius: 3px;
+                font-size: 11px;
+                cursor: pointer;
+            }
+            .delete-btn:hover {
+                background: #b71c1c;
+            }
+            .tree-node {
+                padding: 6px 10px;
+                cursor: pointer;
+                display: block;
+                width: 100%;
+            }
+
+            .tree-node:hover {
+                background: #e8e8e8;
+            }
+            .children {
+                display: none;
+            }
+
+            #incomingModal {
+                position: fixed;
+                top: 80px;
+                right: 40px;
+                display: none;
+                z-index: 3000;
+                pointer-events: none; /* allows clicks to pass through */
+            }
+
+            .incoming-modal {
+                position: relative;
+                width: 420px;
+                max-height: 80vh;
+                background: rgba(10,12,30,0.97);
+                border-radius: 16px;
+                box-shadow: 0 0 40px rgba(75,83,185,0.5);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                pointer-events: auto;
+            }
+
+            .incoming-header,
+            .incoming-footer {
+                padding: 12px 16px;
+                display: flex;
+                align-items: center;
+                border-bottom: 1px solid rgba(255,255,255,0.06);
+            }
+            .incoming-footer {
+                border-top: 1px solid rgba(255,255,255,0.06);
+                border-bottom: none;
+            }
+            .incoming-header span {
+                font-family: "League Spartan", sans-serif;
+                font-size: 1.2rem;
+                color: #fff;
+            }
+            .incoming-close {
+                margin-left: auto;
+                background: none;
+                border: none;
+                color: #aaa;
+                font-size: 1.2rem;
+                cursor: pointer;
+            }
+            .incoming-body {
+                padding: 10px 16px 16px;
+                overflow: auto;
+            }
+            .incoming-footer button {
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.08);
+                color: #fff;
+                border-radius: 6px;
+                padding: 8px 12px;
+                cursor: pointer;
+            }
+            .incoming-footer button:hover {
+                background: rgba(255,255,255,0.08);
+            }
+            /* Drag handle */
+            .incoming-drag-handle {
+                width: 100%;
+                padding: 10px 14px;
+                background: rgba(255,255,255,0.05);
+                cursor: move;
+                font-family: "League Spartan", sans-serif;
+                color: #fff;
+                font-size: 1rem;
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+            }
+
+            /* Resize handle */
+            .incoming-resize-handle {
+                width: 14px;
+                height: 14px;
+                background: rgba(255,255,255,0.15);
+                position: absolute;
+                right: 0;
+                bottom: 0;
+                cursor: se-resize;
+                border-radius: 3px;
+            }
+
+            .remaining-input {
+                width: 70px;
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.12);
+                color:#fff;
+                border-radius:4px;
+                padding:4px 6px;
+                font-size:12px;
+            }
+            .incoming-delete-btn {
+                background:#c62828;
+                color:#fff;
+                border:none;
+                padding:4px 8px;
+                border-radius:3px;
+                font-size:11px;
+                cursor:pointer;
+            }
+            .incoming-delete-btn:hover {
+                background:#b71c1c;
+            }
 
         .inventory-wrapper {
             position: absolute;
@@ -172,7 +347,19 @@ $user = $_SESSION['user'];
 <div id="nodeView">
     <div id="noItems"></div>
     <table class="items-table" id="itemsTable" style="display:none;">
-        <thead><tr><th>Name</th><th>Type</th><th>Expiry</th><th>Calories</th><th>Location</th><th>RFID</th></tr></thead>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Expiry</th>
+                <th>Calories</th>
+                <th>Location</th>
+                <th>RFID</th>
+                <th>Remaining</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
         <tbody id="itemsBody"></tbody>
     </table>
 </div>
@@ -180,7 +367,19 @@ $user = $_SESSION['user'];
 <!-- Search Results View -->
 <div id="searchView" style="display:none;">
     <table class="items-table">
-        <thead><tr><th>Name</th><th>Type</th><th>Expiry</th><th>Calories</th><th>Location</th><th>RFID</th></tr></thead>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Expiry</th>
+                <th>Calories</th>
+                <th>Location</th>
+                <th>RFID</th>
+                <th>Remaining</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
         <tbody id="searchResults"></tbody>
     </table>
 </div>
@@ -188,6 +387,44 @@ $user = $_SESSION['user'];
 
         </main>
     </div>
+<!-- Incoming Items Modal -->
+<div id="incomingModal" style="display:none;">
+  <div class="incoming-modal">
+    <div class="incoming-drag-handle">Incoming Items</div>
+    <div class="incoming-resize-handle"></div>
+
+    <div class="incoming-header">
+      <span>Incoming Items</span>
+      <button class="incoming-close" id="incomingCloseBtn">✕</button>
+    </div>
+    <div class="incoming-body">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>✓</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Expiry</th>
+            <th>Calories</th>
+            <th>Location</th>
+            <th>RFID</th>
+            <th>Remaining %</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="incomingBody"></tbody>
+      </table>
+      <div id="incomingEmpty" style="color:rgba(255,255,255,0.6); margin-top:10px;"></div>
+    </div>
+    <div class="incoming-footer">
+      <button id="incomingRefreshBtn">Refresh</button>
+      <div style="flex:1;"></div>
+      <button id="incomingMoveBtn" style="background:#4b53b9;">Move Selected to Inventory</button>
+      <button id="incomingCancelBtn">Close</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 
@@ -275,7 +512,216 @@ document.addEventListener("keydown", function(e) {
 
     lastKeyTime = currentTime;
 });
+const GET_INCOMING = 'database/get_incoming_items.php';
+const ADD_INCOMING = "database/add_incoming_item_to_node.php";
 
+const incomingModal = document.getElementById('incomingModal');
+const incomingBody = document.getElementById('incomingBody');
+const incomingEmpty = document.getElementById('incomingEmpty');
+
+document.getElementById('incomingItembtn').addEventListener('click', openIncomingModal);
+document.getElementById('incomingCloseBtn').addEventListener('click', closeIncomingModal);
+document.getElementById('incomingCancelBtn').addEventListener('click', closeIncomingModal);
+document.getElementById('incomingRefreshBtn').addEventListener('click', loadIncomingItems);
+document.getElementById('incomingMoveBtn').addEventListener('click', moveSelectedIncomingItems);
+
+// DRAGGING
+(function() {
+    const modal = document.querySelector('.incoming-modal');
+    const handle = document.querySelector('.incoming-drag-handle');
+
+    let offsetX = 0, offsetY = 0, dragging = false;
+
+    handle.addEventListener('mousedown', e => {
+        dragging = true;
+        offsetX = e.clientX - modal.offsetLeft;
+        offsetY = e.clientY - modal.offsetTop;
+        document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        modal.style.left = (e.clientX - offsetX) + 'px';
+        modal.style.top = (e.clientY - offsetY) + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+        dragging = false;
+        document.body.style.userSelect = 'auto';
+    });
+})();
+// RESIZING
+(function() {
+    const modal = document.querySelector('.incoming-modal');
+    const grip = document.querySelector('.incoming-resize-handle');
+
+    let resizing = false, startX, startY, startW, startH;
+
+    grip.addEventListener('mousedown', e => {
+        resizing = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startW = modal.offsetWidth;
+        startH = modal.offsetHeight;
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', e => {
+        if (!resizing) return;
+        modal.style.width = (startW + (e.clientX - startX)) + 'px';
+        modal.style.height = (startH + (e.clientY - startY)) + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+        resizing = false;
+        document.body.style.userSelect = 'auto';
+    });
+})();
+function toggleNode(el) {
+    const kids = el.nextElementSibling;
+    if (!kids) return;
+
+    kids.style.display = kids.style.display === "none" ? "block" : "none";
+}
+function selectNode(id) {
+    document.querySelectorAll('.children').forEach(c => c.style.display = 'none');
+
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el && el.nextElementSibling) {
+        el.nextElementSibling.style.display = 'block';
+    }
+
+    window.currentNodeId = id;
+}
+
+function openIncomingModal() {
+    incomingModal.style.display = 'block';
+    loadIncomingItems();
+}
+function closeIncomingModal() {
+    incomingModal.style.display = 'none';
+}
+
+function loadIncomingItems() {
+    incomingBody.innerHTML = '';
+    incomingEmpty.textContent = 'Loading...';
+    fetch(GET_INCOMING)
+        .then(r => r.json())
+        .then(items => {
+            incomingBody.innerHTML = '';
+            if (!items || !items.length) {
+                incomingEmpty.textContent = 'No incoming items.';
+                return;
+            }
+            incomingEmpty.textContent = '';
+            items.forEach(it => {
+                const tr = document.createElement('tr');
+
+                const shortLoc = (it.location || '').length > 30
+                    ? it.location.slice(0, 27) + '...'
+                    : (it.location || '');
+
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="incoming-check" data-id="${it.id}"></td>
+                    <td>${escapeHtml(it.name)}</td>
+                    <td>${escapeHtml(it.type || '')}</td>
+                    <td>${escapeHtml(it.expiry_date || '')}</td>
+                    <td>${escapeHtml(it.calories || '')}</td>
+                    <td class="location-cell" title="${escapeHtml(it.location || '')}">${escapeHtml(shortLoc)}</td>
+                    <td>${escapeHtml(it.rfid || '')}</td>
+                    <td>
+                        <input type="number" min="0" max="100" value="100"
+                               class="remaining-input" data-id="${it.id}">
+                    </td>
+                    <td>
+                        <button class="incoming-delete-btn" data-id="${it.id}">Remove</button>
+                    </td>
+                `;
+                incomingBody.appendChild(tr);
+            });
+
+            incomingBody.querySelectorAll('.incoming-delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    deleteIncomingItem(id);
+                });
+            });
+        })
+        .catch(() => {
+            incomingEmpty.textContent = 'Error loading incoming items.';
+        });
+}
+
+function getSelectedIncoming() {
+    const checks = Array.from(document.querySelectorAll('.incoming-check:checked'));
+    return checks.map(ch => {
+        const id = ch.getAttribute('data-id');
+        const remInput = document.querySelector(`.remaining-input[data-id="${id}"]`);
+        let remaining = parseInt(remInput && remInput.value, 10);
+        if (isNaN(remaining) || remaining < 0) remaining = 0;
+        if (remaining > 100) remaining = 100;
+        return { id, remaining };
+    });
+}
+
+function moveSelectedIncomingItems() {
+    const selected = getSelectedIncoming();
+    if (!selected.length) {
+        alert('Select at least one incoming item.');
+        return;
+    }
+    if (!window.currentNodeId) {
+        alert('Select a node in the hierarchy first.');
+        return;
+    }
+
+    const ids = selected.map(s => s.id);
+    const remainingMap = {};
+    selected.forEach(s => remainingMap[s.id] = s.remaining);
+
+    const formData = new FormData();
+    formData.append('hierarchy_id', window.currentNodeId);
+    formData.append('ids', ids.join(','));
+    formData.append('remaining', JSON.stringify(remainingMap));
+
+    fetch(ADD_INCOMING, { method: 'POST', body: formData })
+        .then(r => r.text())
+        .then(txt => {
+            if (txt.trim() === 'OK') {
+                loadIncomingItems();
+                if (typeof loadItemsForNode === 'function') {
+                    loadItemsForNode(window.currentNodeId);
+                }
+            } else {
+                alert('Error: ' + txt);
+            }
+        })
+        .catch(err => alert('Error: ' + err));
+}
+
+function deleteIncomingItem(id) {
+    if (!confirm('Remove this incoming item?')) return;
+    const formData = new FormData();
+    formData.append('delete_id', id);
+
+    fetch(ADD_INCOMING, { method: 'POST', body: formData })
+        .then(r => r.text())
+        .then(txt => {
+            if (txt.trim() === 'OK') {
+                loadIncomingItems();
+            } else {
+                alert('Error: ' + txt);
+            }
+        })
+        .catch(err => alert('Error: ' + err));
+}
+
+function shortenLocation(full) {
+    if (!full) return '';
+    const parts = full.split(' / ');
+    return parts.length > 2 ? parts.slice(-2).join(' / ') : full;
+}
 
 function autoAddIncomingByRFID(rfid) {
     fetch('database/get_incoming_items.php?q=' + encodeURIComponent(rfid))
@@ -354,7 +800,7 @@ function showTemporaryMessage(msg, color="white") {
 
 
 function showIncomingItemForm() {
-    if (!currentNode) return alert('Select a node first.');
+    if (!window.currentNodeId) return alert('Select a node first.');
 
     scanningIncoming = true;   // ENABLE SCAN MODE
     scannewitem = false;       // ensure only one mode is active
@@ -388,13 +834,34 @@ function searchIncomingItems() {
             return;
         }
         items.forEach(it => {
-            const li = document.createElement('li');
-            li.textContent = `${it.name} (${it.type})`;
-            li.dataset.id = it.id;
-            li.style.padding = '6px';
-            li.style.cursor = 'pointer';
-            li.onclick = () => li.classList.toggle('selected');
-            ul.appendChild(li);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${escapeHtml(it.name)}</td>
+                <td class="uppercase">${escapeHtml(it.type || '')}</td>
+                <td>${it.expiry_date || ''}</td>
+                <td>${it.calories || ''}</td>
+
+                <!-- Shortened location -->
+                <td class="location-cell" title="${escapeHtml(it.location || '')}">
+                    ${escapeHtml(shortenLocation(it.location))}
+                </td>
+
+                <td>${escapeHtml(it.rfid || '')}</td>
+
+                <!-- Remaining % bar -->
+                <td>
+                    <div class="percent-bar">
+                        <div class="percent-fill" style="width:${it.remaining_percent || 0}%"></div>
+                    </div>
+                    <span style="font-size:11px;margin-left:4px;">${it.remaining_percent || 0}%</span>
+                </td>
+
+                <!-- Remove button -->
+                <td>
+                    <button class="delete-btn" onclick="deleteItem(${it.id})">Remove</button>
+                </td>
+            `;
+            body.appendChild(tr);
         });
     });
 }
@@ -457,26 +924,47 @@ function renderTree(data) {
         ul.appendChild(createNodeLI(node, data));
     });
 }
+function deleteItem(id) {
+    if (!confirm("Remove this item?")) return;
+
+    fetch('delete_item.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'id=' + encodeURIComponent(id)
+    })
+    .then(() => loadItemsForNode(currentNodeId)) // reload table
+    .catch(err => console.error(err));
+}
 
 function createNodeLI(node, data) {
     const li = document.createElement('li');
-    li.textContent = node.name;
+    li.classList.add('tree-node');
     li.dataset.id = node.id;
-    li.onclick = (e) => { e.stopPropagation(); selectTreeNode(node.id); };
+    li.textContent = node.name;
 
-    // children
-    const children = data.filter(d => String(d.parent_id) === String(node.id));
-    if (children && children.length) {
-        const childUl = document.createElement('ul');
-        childUl.className = 'node-children';
-        children.forEach(c => childUl.appendChild(createNodeLI(c, data)));
-        li.appendChild(childUl);
+    // clicking a tree node selects + loads + remembers
+    li.onclick = (e) => {
+        e.stopPropagation();
+        selectTreeNode(node.id);
+    };
+
+    // find children
+    const children = data.filter(x => String(x.parent_id) === String(node.id));
+    if (children.length > 0) {
+        const ul = document.createElement('ul');
+        children.forEach(child => {
+            ul.appendChild(createNodeLI(child, data));
+        });
+        li.appendChild(ul);
     }
+
     return li;
 }
 
+
 function selectTreeNode(id) {
-    currentNode = id;
+    window.currentNodeId = id;
+
     // highlight
     document.querySelectorAll('#tree li').forEach(li => li.classList.remove('selected'));
     const li = document.querySelector('#tree li[data-id="'+id+'"]');
@@ -485,7 +973,8 @@ function selectTreeNode(id) {
     // update title
     const node = treeData.find(n => String(n.id) === String(id));
     document.getElementById('nodeTitle').textContent = node ? node.name : 'Select a node';
-    // build a simple path (breadcrumbs)
+
+    // breadcrumbs
     let path = node ? node.name : '';
     let p = node;
     while (p && p.parent_id) {
@@ -493,10 +982,18 @@ function selectTreeNode(id) {
         if (p) path = p.name + ' / ' + path;
     }
     document.getElementById('nodePath').textContent = path;
+
+    // form hidden field
     document.getElementById('form_hierarchy_id').value = id;
 
+    // remember last selected
+    localStorage.setItem('lastNode', id);
+
+    // load node
     loadNode(id);
 }
+
+
 
 function loadNode(id) {
     fetch(GET_ITEMS + '?id=' + encodeURIComponent(id))
@@ -516,15 +1013,35 @@ function loadNode(id) {
         if (items && items.length > 0) {
             table.style.display = 'table';
             items.forEach(it => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${escapeHtml(it.name)}</td>
-                    <td class="uppercase">${escapeHtml(it.type || '')}</td>
-                    <td>${it.expiry_date || ''}</td>
-                    <td>${it.calories || ''}</td>
-                    <td>${escapeHtml(it.location || '')}</td>
-                    <td>${escapeHtml(it.rfid || '')}</td>`;
-                body.appendChild(tr);
-            });
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${escapeHtml(it.name)}</td>
+                <td class="uppercase">${escapeHtml(it.type || '')}</td>
+                <td>${it.expiry_date || ''}</td>
+                <td>${it.calories || ''}</td>
+
+                <!-- Shortened location -->
+                <td class="location-cell" title="${escapeHtml(it.location || '')}">
+                    ${escapeHtml(shortenLocation(it.location))}
+                </td>
+
+                <td>${escapeHtml(it.rfid || '')}</td>
+
+                <!-- Remaining % bar -->
+                <td>
+                    <div class="percent-bar">
+                        <div class="percent-fill" style="width:${it.remaining_percent || 0}%"></div>
+                    </div>
+                    <span style="font-size:11px;margin-left:4px;">${it.remaining_percent || 0}%</span>
+                </td>
+
+                <!-- Remove button -->
+                <td>
+                    <button class="delete-btn" onclick="deleteItem(${it.id})">Remove</button>
+                </td>
+            `;
+            body.appendChild(tr);
+        });
             noItemsDiv.style.display = 'none';
             return;
         }
@@ -579,8 +1096,11 @@ function loadNode(id) {
 
                 card.onclick = (e) => {
                     e.stopPropagation();
-                    selectTreeNode(child.id);
+                    selectTreeNode(child.id); // this now selects + loads + remembers
                 };
+
+
+
 
                 card.innerHTML = `
                     <div style="font-weight:700; font-size:1.25rem; margin-bottom:8px; color:#ffffff;">
@@ -621,7 +1141,7 @@ function childHasItems(nodeId) {
 function showItemForm() {
     scannewitem = true
 
-    if (!currentNode) {
+    if (!currentNodeId) {
         alert('Select a node first.');
         return;
     }
@@ -652,7 +1172,7 @@ function submitItemForm(e) {
     fd.append('rfid', document.getElementById('item_rfid').value);
     fd.append('type', document.getElementById('item_type').value);
 
-    fetch(CREATE_ITEM, { method:'POST', body: fd })
+    fetch('database/create_incoming_item.php', { method:'POST', body: fd })
     .then(r => r.text())
     .then(txt => {
         if (txt.trim() === 'OK') {
@@ -715,10 +1235,30 @@ function searchItems(q) {
                 <td class="uppercase">${escapeHtml(it.type || '')}</td>
                 <td>${it.expiry_date || ''}</td>
                 <td>${it.calories || ''}</td>
-                <td>${escapeHtml(it.location || '')}</td>
-                <td>${escapeHtml(it.rfid || '')}</td>`;
+
+                <!-- Shortened location -->
+                <td class="location-cell" title="${escapeHtml(it.location || '')}">
+                    ${escapeHtml(shortenLocation(it.location))}
+                </td>
+
+                <td>${escapeHtml(it.rfid || '')}</td>
+
+                <!-- Remaining % bar -->
+                <td>
+                    <div class="percent-bar">
+                        <div class="percent-fill" style="width:${it.remaining_percent || 0}%"></div>
+                    </div>
+                    <span style="font-size:11px;margin-left:4px;">${it.remaining_percent || 0}%</span>
+                </td>
+
+                <!-- Remove button -->
+                <td>
+                    <button class="delete-btn" onclick="deleteItem(${it.id})">Remove</button>
+                </td>
+            `;
             body.appendChild(tr);
         });
+
     });
 }
 
@@ -726,6 +1266,14 @@ function searchItems(q) {
 // small utilities
 function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
 function debounce(fn, wait){ let t; return function(evt){ clearTimeout(t); t = setTimeout(()=>fn(evt), wait); } }
+
+window.addEventListener('DOMContentLoaded', () => {
+    const last = localStorage.getItem('lastNode');
+    if (last) {
+        selectTreeNode(last);
+    }
+});
+
 </script>
 
 </body>
