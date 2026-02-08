@@ -199,20 +199,17 @@ $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <div id="contractsContainer">
         <table id="contractsTable">
           <thead>
-            <tr draggable="true">
-    <td><?php echo htmlspecialchars($row['contract_name']); ?></td>
-    <td><?php echo htmlspecialchars($row['supplier_name']); ?></td>
-    <td><?php echo htmlspecialchars($row['start_date']); ?></td>
-    <td><?php echo htmlspecialchars($row['end_date']); ?></td>
-    <td style="color:<?php echo $row['status']=='Active'?'#0f0':($row['status']=='Pending'?'#ff0':'#f00'); ?>">
-        <?php echo htmlspecialchars($row['status']); ?>
-    </td>
+            <tr>
+              <th>Contract Name</th>
+              <th>Supplier</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Status</th>
+              <th>Value</th>
+              <th>Actions</th>
+            </tr>
+            </td>
 
-    <!-- ⭐ THIS IS CHANGE #3 -->
-    <td><?php echo formatContractValue($row['contract_value']); ?></td>
-
-    <td><a href="contracts.php?delete=<?php echo $row['contract_id']; ?>" style="color:red;">Delete</a></td>
-</tr>
           </thead>
           <tbody>
             <?php if (empty($contracts)): ?>
@@ -227,6 +224,7 @@ $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                   <td style="color:<?php echo $row['status']=='Active'?'#0f0':($row['status']=='Pending'?'#ff0':'#f00'); ?>">
                     <?php echo htmlspecialchars($row['status']); ?>
                   </td>
+                  <td><?php echo formatContractValue($row['contract_value']); ?></td>
                   <td><a href="contracts.php?delete=<?php echo $row['contract_id']; ?>" style="color:red;">Delete</a></td>
                 </tr>
               <?php endforeach; ?>
