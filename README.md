@@ -56,4 +56,38 @@ WHERE name = 'Torque Wrench 5-60 Nm'
 LIMIT 1;
 
 
+UPDATE items
+SET rfid = '3822914455'
+WHERE name = 'Pump Assembly Water Recycling'
+ORDER BY id
+LIMIT 1;
+
+UPDATE items
+SET rfid = '3823955566'
+WHERE id = (
+    SELECT id FROM (
+        SELECT id
+        FROM items
+        WHERE name = 'Pump Assembly Water Recycling'
+        ORDER BY id
+        LIMIT 1 OFFSET 1
+    ) AS t
+);
+
+UPDATE items
+SET rfid = '1071688899'
+WHERE name = 'Precision Screwdriver Set 24-bit'
+LIMIT 1;
+
+UPDATE items
+SET rfid = '3816691223'
+WHERE name = 'Fan Module Environmental Control'
+LIMIT 1;
+
+UPDATE items
+SET rfid = '3820456000'
+WHERE name = 'Compressed Waste Block 5kg'
+LIMIT 1;
+
+
 
