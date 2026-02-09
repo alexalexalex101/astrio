@@ -111,8 +111,8 @@ html, body {
     width: 100%;
 }
 .planetcenter .loginbuttons {
-    width:30.2625rem;
-    height:6.74375rem;
+    width:28.2625rem;
+    height:6rem;
     margin-top:1rem;
     margin-bottom: 1em;
     border-radius: 5rem;
@@ -169,7 +169,7 @@ box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 15p
 }
 
 .LoginTitle {
-    font-size: 5rem;
+    font-size: 3rem;
     font-family: "nasalization", sans-serif;
     font-weight: 600;
     color: #023535;

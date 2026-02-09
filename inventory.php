@@ -57,6 +57,37 @@ body {
     overflow: hidden;
 }
 
+/* Back button (special small red card) */
+.back-card {
+    width: calc(420px * 0.65);          /* 65% of normal card width */
+    background: #b91c1c;                 /* red background */
+    border: 1px solid #991b1b;
+    color: white;
+    padding: 14px 16px;                 /* slightly less padding */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.4);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;                 /* small spacing below */
+}
+
+.back-card:hover {
+    background: #c53030;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(185, 28, 28, 0.6);
+}
+
+.back-card::before {
+    content: "←";
+    font-size: 18px;
+}
+
 /* ============================
    NEW MISSION CONTROL SIDEBAR
    ============================ */
@@ -611,7 +642,28 @@ function loadTree() {
 function renderTree(tree) {
     const ul = document.getElementById("tree");
     ul.innerHTML = "";
+    
     tree.forEach(n => ul.appendChild(renderNode(n, null)));
+
+    if (tree.length > 0) {
+        const firstNode = tree[0];
+        selectNode(firstNode);
+
+        const firstLi = document.querySelector(`#tree li[data-id="${firstNode.id}"]`);
+        if (firstLi) {
+            firstLi.classList.add("selected");
+
+            if (firstNode.children && firstNode.children.length > 0) {
+                firstLi.classList.remove("tree-collapsed");
+                const arrow = firstLi.querySelector(".tree-arrow");
+                if (arrow) arrow.textContent = "▼";
+            }
+        }
+
+        if (firstLi) {
+            firstLi.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }
 }
 
 function renderNode(node, parent) {
@@ -619,6 +671,7 @@ function renderNode(node, parent) {
 
     const li = document.createElement("li");
     li.classList.add("tree-collapsed");
+    li.dataset.id = node.id;           // ← ADD THIS LINE
 
     const row = document.createElement("div");
     row.className = "tree-node";
@@ -660,12 +713,48 @@ function renderNode(node, parent) {
     return li;
 }
 
+function expandPathToNode(targetNode) {
+    if (!targetNode) return;
+
+    let current = targetNode;
+    const toExpand = [];
+
+    // Collect all parents up to root
+    while (current && current.parent) {
+        toExpand.push(current.parent);
+        current = current.parent;
+    }
+
+    // Expand from root toward the target
+    toExpand.reverse().forEach(ancestor => {
+        const li = document.querySelector(`#tree li[data-id="${ancestor.id}"]`);
+        if (li && li.classList.contains("tree-collapsed")) {
+            li.classList.remove("tree-collapsed");
+            const arrow = li.querySelector(".tree-arrow");
+            if (arrow) arrow.textContent = "▼";
+        }
+    });
+
+    // Scroll the selected node into view
+    const selectedLi = document.querySelector(`#tree li[data-id="${targetNode.id}"]`);
+    if (selectedLi) {
+        selectedLi.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+}   
 
 function selectNode(node) {
-    currentNode = node;
+currentNode = node;
 
     document.getElementById("nodeTitle").textContent = node.name;
     document.getElementById("nodePath").textContent = buildPath(node);
+
+    // ─── ADD THESE LINES ───────────────────────────────
+    expandPathToNode(node);
+
+    document.querySelectorAll("#tree li").forEach(x => x.classList.remove("selected"));
+    const myLi = document.querySelector(`#tree li[data-id="${node.id}"]`);
+    if (myLi) myLi.classList.add("selected");
+    // ─────────────────────────────────────────────────────
 
     if (node.children && node.children.length) {
         showCTBCards(node.children);
@@ -692,6 +781,20 @@ function showCTBCards(children) {
     container.innerHTML = "";
     container.style.display = "flex";
 
+    // --- Add Back button if current node has a parent ---
+    if (currentNode && currentNode.parent) {
+        const backCard = document.createElement("div");
+        backCard.className = "back-card";
+        backCard.textContent = "Back to " + currentNode.parent.name;
+        
+        backCard.onclick = () => {
+            selectNode(currentNode.parent);
+        };
+        
+        container.appendChild(backCard);
+    }
+
+    // Then add all child cards
     children.forEach(child => {
         const remaining = child.remaining ?? 100;
         const items = child.item_count ?? 0;

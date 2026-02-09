@@ -19,7 +19,6 @@
     <a href="database/logout.php" id="logoutBtn">Log out</a>
     <div class="circle">
             <div class="planetcenter">
-
                     <p class="LoginTitle">Welcome, <?= $user['first_name'] . ' ' . $user['last_name'] ?></p>
 
                     <div class="navcontainer">
@@ -31,7 +30,7 @@
                         <div>
                             <button>SCHEDULE ORDERS</button>
                             <span id="space2"></span>                            
-                            <button>VISUALIZATION</button>
+                            <button onclick="window.location.href='visualization-tree.php'">VISUALIZATION</button>
                         </div>
                         <div>
                             <button>LOGS</button>
@@ -39,7 +38,7 @@
                             <button onclick="window.location.href='contracts.php'">CONTRACTS</button>
                         </div>
                     </div>
-                
+            </div>
             </div>
         </div>
 </body>
