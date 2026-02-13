@@ -57,6 +57,46 @@ body {
     overflow: hidden;
 }
 
+#itemFormArea {
+    background: #1a1f2b;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    max-width: 400px;
+}
+
+#itemFormArea h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #fff;
+    font-size: 18px;
+}
+
+#itemFormArea label {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    color: #cfd6e4;
+    font-size: 14px;
+}
+
+#itemFormArea input,
+#itemFormArea select {
+    width: 100%;
+    padding: 7px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background: #2a3040;
+    color: #fff;
+    margin-bottom: 6px;
+}
+
+#itemFormArea button {
+    margin-top: 12px;
+    width: 100%;
+}
+
+
 /* Back button (special small red card) */
 .back-card {
     width: calc(420px * 0.65);          /* 65% of normal card width */
@@ -539,9 +579,6 @@ body {
                     <option value="medical">Medical</option>
                     <option value="waste">Waste</option>
                 </select>
-
-                <label>Location</label>
-                <textarea id="item_location" rows="2"></textarea>
 
                 <label>Expiry Date</label>
                 <input id="item_expiry" type="date">
@@ -1045,6 +1082,54 @@ function loadIncoming() {
             });
         });
 }
+
+// Renamed to avoid clobbering the main `setupForm()` above.
+function setupSubmitItem() {
+    const btn = document.getElementById("submitItemBtn");
+    if (btn) btn.onclick = submitItem;
+}
+
+function submitItem() {
+    const nameEl = document.getElementById("itemName");
+    if (!nameEl) {
+        alert("Submit fields not found on this page.");
+        return;
+    }
+
+    const name = nameEl.value;
+    const type = document.getElementById("itemType")?.value || "";
+    const expiry = document.getElementById("itemExpiry")?.value || "";
+    const calories = document.getElementById("itemCalories")?.value || "";
+    const rfid = document.getElementById("itemRFID")?.value || "";
+    const volume = document.getElementById("itemVolume")?.value || "";
+
+    if (!currentNode || !currentNode.id) {
+        alert("Please select a node first.");
+        return;
+    }
+
+    const nodeId = currentNode.id;
+
+    // Use the existing file `create_incoming_item.php` (singular) in `database/`
+    fetch("database/create_incoming_item.php", {
+        method: "POST",
+        body: new URLSearchParams({
+            hierarchy_id: nodeId,
+            name,
+            type,
+            expiry_date: expiry,
+            calories,
+            rfid,
+            volume_liters: volume
+        })
+    })
+    .then(r => r.text())
+    .then(() => {
+        loadItems(nodeId);
+        alert("Item added.");
+    });
+}
+
 </script>
 
 
