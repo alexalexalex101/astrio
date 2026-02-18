@@ -57,6 +57,46 @@ body {
     overflow: hidden;
 }
 
+#itemFormArea {
+    background: #1a1f2b;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    max-width: 400px;
+}
+
+#itemFormArea h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #fff;
+    font-size: 18px;
+}
+
+#itemFormArea label {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    color: #cfd6e4;
+    font-size: 14px;
+}
+
+#itemFormArea input,
+#itemFormArea select {
+    width: 100%;
+    padding: 7px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background: #2a3040;
+    color: #fff;
+    margin-bottom: 6px;
+}
+
+#itemFormArea button {
+    margin-top: 12px;
+    width: 100%;
+}
+
+
 /* Back button (special small red card) */
 .back-card {
     width: calc(420px * 0.65);          /* 65% of normal card width */
@@ -526,13 +566,13 @@ body {
         <!-- ITEM FORM -->
         <div id="itemFormArea" class="item-form-area" style="display:none;">
             <form id="itemForm">
-                <input type="hidden" id="form_hierarchy_id">
+                <input type="hidden" id="form_hierarchy_id" name="hierarchy_id">
 
                 <label>Name</label>
-                <input id="item_name" required>
+                <input id="item_name" name="name" required>
 
                 <label>Type</label>
-                <select id="item_type">
+                <select id="item_type" name="type">
                     <option value="food">Food</option>
                     <option value="equipment">Equipment</option>
                     <option value="tool">Tool</option>
@@ -540,17 +580,17 @@ body {
                     <option value="waste">Waste</option>
                 </select>
 
-                <label>Location</label>
-                <textarea id="item_location" rows="2"></textarea>
-
                 <label>Expiry Date</label>
-                <input id="item_expiry" type="date">
+                <input id="item_expiry" name="expiry_date" type="date">
 
                 <label>Calories</label>
-                <input id="item_calories" type="number">
+                <input id="item_calories" name="calories" type="number">
 
                 <label>RFID</label>
-                <input id="item_rfid">
+                <input id="item_rfid" name="rfid">
+
+                <label>Remaining (%)</label>
+                <input id="item_remaining" name="remaining_percent" type="number" min="0" max="100" value="100">
 
                 <div class="form-buttons">
                     <button type="submit" class="control-btn">Save Item</button>
@@ -564,10 +604,12 @@ body {
 
         <!-- ITEMS TABLE -->
         <div id="nodeItemsWrapper">
+            <button id="takeSelectedBtn" class="control-btn" style="display:none; margin-bottom:10px;">Take Selected</button>
             <div id="noItems" class="no-items"></div>
             <table id="itemsTable" class="items-table" style="display:none;">
                 <thead>
                     <tr>
+                        <th></th>
                         <th>Name</th>
                         <th>Type</th>
                         <th>Expiry</th>
@@ -627,6 +669,9 @@ document.addEventListener("DOMContentLoaded", () => {
     setupSearch();
     setupForm();
     setupIncoming();
+    setupSubmitItem(); // wire submit handler for incoming/new-item submit button
+    const takeBtn = document.getElementById('takeSelectedBtn');
+    if (takeBtn) takeBtn.onclick = takeSelected;
 });
 
 // ---------- TREE ----------
@@ -864,29 +909,33 @@ function renderItems(items) {
     const table = document.getElementById("itemsTable");
     const body = document.getElementById("itemsBody");
     const noItems = document.getElementById("noItems");
+    const takeBtn = document.getElementById('takeSelectedBtn');
 
     body.innerHTML = "";
 
     if (!items || !items.length) {
         noItems.textContent = "No items in this node.";
         table.style.display = "none";
+        if (takeBtn) takeBtn.style.display = 'none';
         return;
     }
 
     noItems.textContent = "";
     table.style.display = "table";
+    if (takeBtn) takeBtn.style.display = 'inline-block';
 
     items.forEach(item => {
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
+            <td><input type="checkbox" class="item-select" data-id="${item.id}"></td>
             <td>${item.name}</td>
             <td>${item.type}</td>
             <td>${item.expiry || ""}</td>
             <td>${item.calories || ""}</td>
             <td>${shortenLocation(item.location || "")}</td>
             <td>${item.rfid || ""}</td>
-            <td>${(item.remaining ?? 100)}%</td>
+            <td>${(item.remaining_percent ?? 100)}%</td>
         `;
 
         body.appendChild(tr);
@@ -897,6 +946,39 @@ function clearItems() {
     document.getElementById("itemsBody").innerHTML = "";
     document.getElementById("itemsTable").style.display = "none";
     document.getElementById("noItems").textContent = "";
+    const takeBtn = document.getElementById('takeSelectedBtn');
+    if (takeBtn) takeBtn.style.display = 'none';
+}
+
+function takeSelected() {
+    const checks = Array.from(document.querySelectorAll('.item-select:checked'));
+    if (!checks.length) {
+        alert('No items selected');
+        return;
+    }
+
+    const ids = checks.map(c => c.dataset.id);
+    const input = prompt('Enter percent to TAKE from each selected item (1-100):', '1');
+    if (input === null) return;
+    const amount = parseInt(input, 10);
+    if (isNaN(amount) || amount <= 0) {
+        alert('Invalid amount');
+        return;
+    }
+
+    fetch('database/take_items.php', {
+        method: 'POST',
+        body: new URLSearchParams({ ids: ids.join(','), amount })
+    })
+    .then(r => r.text())
+    .then(text => {
+        if (text.trim() === 'OK') {
+            if (currentNode && currentNode.id) loadItems(currentNode.id);
+        } else {
+            alert('Error: ' + text);
+        }
+    })
+    .catch(err => alert('Request failed: ' + err));
 }
 
 // ---------- SEARCH ----------
@@ -1003,6 +1085,9 @@ function setupIncoming() {
     const modal = document.getElementById("incomingModal");
     const openBtn = document.getElementById("incomingItembtn");
     const closeBtn = document.getElementById("incomingCloseBtn");
+    const refreshBtn = document.getElementById("incomingRefreshBtn");
+    const moveBtn = document.getElementById("incomingMoveBtn");
+    const cancelBtn = document.getElementById("incomingCancelBtn");
 
     if (openBtn) {
         openBtn.onclick = () => {
@@ -1015,6 +1100,18 @@ function setupIncoming() {
         closeBtn.onclick = () => {
             modal.style.display = "none";
         };
+    }
+
+    if (refreshBtn) {
+        refreshBtn.onclick = () => loadIncoming();
+    }
+
+    if (moveBtn) {
+        moveBtn.onclick = () => moveSelectedIncoming();
+    }
+
+    if (cancelBtn) {
+        cancelBtn.onclick = () => { modal.style.display = "none"; };
     }
 }
 
@@ -1037,14 +1134,103 @@ function loadIncoming() {
             items.forEach(item => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
+                    <td><input type="checkbox" class="incoming-select" data-id="${item.id}"></td>
                     <td>${item.name}</td>
                     <td>${item.type}</td>
-                    <td>${item.rfid}</td>
+                    <td>${item.rfid || ''}</td>
+                    <td><input type="number" min="0" max="100" value="100" class="incoming-remaining" data-id="${item.id}" style="width:70px;"></td>
                 `;
                 body.appendChild(tr);
             });
         });
 }
+
+function moveSelectedIncoming() {
+    if (!currentNode || !currentNode.id) {
+        alert('Select a node to move items into first');
+        return;
+    }
+
+    const checks = Array.from(document.querySelectorAll('.incoming-select:checked'));
+    if (!checks.length) {
+        alert('No incoming items selected');
+        return;
+    }
+
+    const ids = checks.map(c => c.dataset.id);
+    const remainingInputs = document.querySelectorAll('.incoming-remaining');
+    const remainingMap = {};
+    remainingInputs.forEach(inp => {
+        const id = inp.dataset.id;
+        const val = parseInt(inp.value, 10);
+        if (!isNaN(val)) remainingMap[id] = Math.max(0, Math.min(100, val));
+    });
+
+    fetch('database/add_incoming_item_to_node.php', {
+        method: 'POST',
+        body: new URLSearchParams({ ids: ids.join(','), hierarchy_id: currentNode.id, remaining: JSON.stringify(remainingMap) })
+    })
+    .then(r => r.text())
+    .then(text => {
+        if (text.trim() === 'OK') {
+            // refresh items in current node and incoming list
+            loadItems(currentNode.id);
+            loadIncoming();
+            document.getElementById('incomingModal').style.display = 'none';
+        } else {
+            alert('Error: ' + text);
+        }
+    })
+    .catch(err => alert('Request failed: ' + err));
+}
+
+// Renamed to avoid clobbering the main `setupForm()` above.
+function setupSubmitItem() {
+    const btn = document.getElementById("submitItemBtn");
+    if (btn) btn.onclick = submitItem;
+}
+
+function submitItem() {
+    const nameEl = document.getElementById("itemName");
+    if (!nameEl) {
+        alert("Submit fields not found on this page.");
+        return;
+    }
+
+    const name = nameEl.value;
+    const type = document.getElementById("itemType")?.value || "";
+    const expiry = document.getElementById("itemExpiry")?.value || "";
+    const calories = document.getElementById("itemCalories")?.value || "";
+    const rfid = document.getElementById("itemRFID")?.value || "";
+    const volume = document.getElementById("itemVolume")?.value || "";
+
+    if (!currentNode || !currentNode.id) {
+        alert("Please select a node first.");
+        return;
+    }
+
+    const nodeId = currentNode.id;
+
+    // Use the existing file `create_incoming_item.php` (singular) in `database/`
+    fetch("database/create_incoming_item.php", {
+        method: "POST",
+        body: new URLSearchParams({
+            hierarchy_id: nodeId,
+            name,
+            type,
+            expiry_date: expiry,
+            calories,
+            rfid,
+            volume_liters: volume
+        })
+    })
+    .then(r => r.text())
+    .then(() => {
+        loadItems(nodeId);
+        alert("Item added.");
+    });
+}
+
 </script>
 
 
