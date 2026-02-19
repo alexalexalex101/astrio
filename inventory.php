@@ -464,6 +464,15 @@ body {
     z-index: 3000;
 }
 
+.incoming-footer {
+    display:flex;
+    justify-content:center;
+}
+
+.incoming-footer button {
+    margin:10px;
+}
+
 .incoming-modal {
     width: 430px;
     max-height: 80vh;
@@ -471,6 +480,7 @@ body {
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 0 40px rgba(120,150,255,0.4);
+    padding:24px;
 }
 
 .incoming-header {
@@ -632,12 +642,10 @@ body {
 <!-- INCOMING MODAL -->
 <div id="incomingModal" class="incoming-modal-wrapper">
     <div class="incoming-modal">
-        <div class="incoming-drag-handle">INCOMING ITEMS</div>
         <div class="incoming-resize-handle"></div>
 
         <div class="incoming-header">
-            <span>Incoming</span>
-            <button id="incomingCloseBtn" class="incoming-close">✕</button>
+            <div class="incoming-drag-handle">INCOMING ITEMS</div>
         </div>
 
         <div class="incoming-body">
@@ -650,7 +658,6 @@ body {
         <div class="incoming-footer">
             <button id="incomingRefreshBtn" class="control-btn">Refresh</button>
             <button id="incomingMoveBtn" class="control-btn">Move Selected</button>
-            <button id="incomingCancelBtn" class="control-btn">Close</button>
         </div>
     </div>
 </div>
