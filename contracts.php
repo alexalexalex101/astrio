@@ -310,17 +310,6 @@ include("database/connection.php");
 /* ------------------------------
    CONTRACT VALUE FORMATTER
 ------------------------------ */
-function formatContractValue($value) {
-    if ($value >= 1000000000) {
-        return '$' . round($value / 1000000000, 2) . 'B';
-    } elseif ($value >= 1000000) {
-        return '$' . round($value / 1000000, 2) . 'M';
-    } elseif ($value >= 1000) {
-        return '$' . round($value / 1000, 2) . 'K';
-    }
-    return '$' . $value;
-}
-
 // Handle Add Contract form
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
     $stmt = $conn->prepare("INSERT INTO contracts (supplier_id, contract_name, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)");
