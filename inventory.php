@@ -409,6 +409,18 @@ body {
     font-weight: 700;
     color: #7bffb0;
 }
+.remaining-fill.green {
+    background-color: #4caf50;
+}
+
+.remaining-fill.yellow {
+    background-color: #ffeb3b;
+}
+
+.remaining-fill.red {
+    background-color: #f44336;
+}
+
 
 /* ITEMS TABLE */
 #nodeItemsWrapper {
@@ -894,7 +906,12 @@ function expandPathToNode(targetNode) {
         }
     }, 80);   // ← 50–150 ms is usually enough
 }
-
+function hideCTBCards() {
+    const container = document.getElementById("ctbCards");
+    if (!container) return;
+    container.style.display = "none";
+    container.innerHTML = "";
+}
 function selectNode(node) {
 currentNode = node;
 
@@ -934,36 +951,41 @@ function showCTBCards(children) {
     container.innerHTML = "";
     container.style.display = "flex";
 
-    // --- Add Back button if current node has a parent ---
     if (currentNode && currentNode.parent) {
         const backCard = document.createElement("div");
         backCard.className = "back-card";
         backCard.textContent = "Back to " + currentNode.parent.name;
-
         backCard.onclick = () => selectNode(currentNode.parent);
         container.appendChild(backCard);
     }
 
-    // Then add all child cards
     children.forEach(child => {
-        const remaining = child.remaining ?? 100;
+        console.log("CHILD:", child);
+
+        const remaining = child.remaining;
+        const used = 100 - remaining;   // NEW
         const items = child.item_count ?? 0;
         const kids = child.children ? child.children.length : 0;
 
         const card = document.createElement("div");
         card.className = "ctb-card";
 
-        // Build remaining bar ONLY for leaf nodes with items
         let barHTML = "";
-        if (kids === 0 && items > 0) {
+        if (child.remaining !== undefined) {
+
+            // Determine bar color based on USED percent
+            let color = "green";
+            if (used >= 60 && used < 85) color = "yellow";
+            if (used >= 85) color = "red";
+
             barHTML = `
                 <div class="remaining-bar">
-                    <div class="remaining-fill" id="fill-${child.id}"></div>
+                    <div class="remaining-fill ${color}" id="fill-${child.id}"></div>
                 </div>
 
                 <div class="remaining-row">
-                    <span class="remaining-label">Remaining</span>
-                    <span class="remaining-percent" id="percent-${child.id}">${remaining}%</span>
+                    <span class="remaining-label">Used</span>
+                    <span class="remaining-percent" id="percent-${child.id}">${used}%</span>
                 </div>
             `;
         }
@@ -983,17 +1005,10 @@ function showCTBCards(children) {
         card.onclick = () => selectNode(child);
         container.appendChild(card);
 
-        // Only animate if bar exists
-        if (kids === 0 && items > 0) {
-            animateRemaining(child.id, remaining);
+        if (child.remaining !== undefined) {
+            animateRemaining(child.id, used);  // animate USED percent
         }
     });
-}
-
-function hideCTBCards() {
-    const container = document.getElementById("ctbCards");
-    container.style.display = "none";
-    container.innerHTML = "";
 }
 
 function animateRemaining(id, percent) {
@@ -1197,11 +1212,19 @@ function setupForm() {
     const form = document.getElementById("itemForm");
 
     if (btn) {
-        btn.onclick = () => {
-            document.getElementById("itemFormArea").style.display = "block";
-            document.getElementById("form_hierarchy_id").value = currentNode?.id || "";
-        };
-    }
+    btn.onclick = () => {
+
+        // ⭐ BLOCK ADDING ITEMS IF NODE IS FULL
+        if (currentNode && currentNode.remaining !== undefined && currentNode.remaining <= 0) {
+            alert("This node is 100% full. You cannot add more items here.");
+            return;
+        }
+
+        // Normal behavior
+        document.getElementById("itemFormArea").style.display = "block";
+        document.getElementById("form_hierarchy_id").value = currentNode?.id || "";
+    };
+}
 
     if (cancel) {
         cancel.onclick = () => {
