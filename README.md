@@ -1,4 +1,4 @@
-#README.md
+# READ ME
 TO SETUP ON A NEW MACHINE:
 1. Install XAMPP
 2. Install PHP Server Extension
