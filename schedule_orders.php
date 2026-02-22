@@ -13,7 +13,7 @@ error_reporting(E_ALL);
  * Requires: db.php defines $conn as mysqli connection to DB `inventory`
  */
 session_start();
-require_once 'db.php';
+require_once 'database/db.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
