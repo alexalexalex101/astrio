@@ -184,4 +184,53 @@ JOIN ctb_specifications s ON h.ctb_type = s.ctb_type
 SET h.capacity_liters = s.capacity_liters
 WHERE h.ctb_type IS NOT NULL;
 
+UPDATE hierarchy
+SET ctb_type = 'CASE'
+WHERE ctb_type IS NULL
+AND (
+    name LIKE '%Group%'
+    OR name LIKE '%Package%'
+    OR name LIKE '%Packs%'
+    OR name LIKE '%Set%'
+    OR name LIKE '%Modules%'
+    OR name LIKE '%Assemblies%'
+    OR name LIKE '%Crate%'
+    OR name LIKE '%Tray%'
+    OR name LIKE '%Row%'
+    OR name LIKE '%Instruments%'
+    OR name LIKE '%Analyzers%'
+    OR name LIKE '%Scopes%'
+    OR name LIKE '%Spares%'
+);
+
+UPDATE hierarchy
+SET ctb_type = 'POUCH'
+WHERE ctb_type IS NULL
+AND name LIKE '%Pouch%';
+
+UPDATE hierarchy
+SET ctb_type = 'STRIP'
+WHERE ctb_type IS NULL
+AND name LIKE '%Strip%';
+
+UPDATE hierarchy
+SET ctb_type = 'SLEEVE'
+WHERE ctb_type IS NULL
+AND name LIKE '%Sleeve%';
+
+UPDATE hierarchy
+SET ctb_type = 'CASE'
+WHERE ctb_type IS NULL
+AND name LIKE '%Case%';
+
+UPDATE hierarchy
+SET ctb_type = 'CTB-1.0'
+WHERE ctb_type IS NULL
+AND name LIKE '%SUB%';
+
+UPDATE hierarchy h
+JOIN ctb_specifications s ON h.ctb_type = s.ctb_type
+SET h.capacity_liters = s.capacity_liters
+WHERE h.ctb_type IS NOT NULL;
+
 
