@@ -13,7 +13,7 @@ error_reporting(E_ALL);
  * Requires: db.php defines $conn as mysqli connection to DB `inventory`
  */
 session_start();
-require_once 'db.php';
+require_once 'database/db.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -676,7 +676,7 @@ select{
 
   <!-- Top Nav (swap hrefs to your real pages) -->
   <nav class="topnav">
-    <a href="index.php">Home</a>
+    <a href="dashboard.php">Home</a>
     <a href="schedule_orders.php" class="active">Schedule Orders</a>
     <a href="inventory.php">Inventory</a>
     <a href="contracts.php">Contracts</a>
