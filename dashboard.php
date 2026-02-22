@@ -28,9 +28,9 @@
                             <button onclick="window.location.href='suppliers.php'">SUPPLIERS</button>
                         </div>
                         <div>
-                            <button>SCHEDULE ORDERS</button>
+                            <button onclick="window.location.href='schedule_orders.php'">SCHEDULE ORDERS</button>
                             <span id="space2"></span>                            
-                            <button onclick="window.location.href='visualization-tree.php'">VISUALIZATION</button>
+                            <button onclick="window.location.href='visualization_tree.php'">VISUALIZATION</button>
                         </div>
                         <div>
                             <button>LOGS</button>
