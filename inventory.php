@@ -155,6 +155,7 @@ body {
     color: #e6ecff;
     margin-bottom: 12px;
     transition: border 0.2s ease, background 0.2s ease;
+    
 }
 
 .sidebar-input:focus {
@@ -191,6 +192,7 @@ body {
     padding-bottom: 6px;
     padding-right: 6px;
     white-space: nowrap; /* prevents wrapping */
+    margin-top: 62px;
 }
 
 /* Prevent sideways clipping */
@@ -449,6 +451,18 @@ body {
     background: rgba(120,150,255,0.12);
 }
 
+/* Highlighted row in items table */
+#itemsTable tr.highlighted {
+    background: rgba(79, 70, 229, 0.35) !important;   /* indigo-ish */
+    border-left: 4px solid #4f46e5;
+    font-weight: 500;
+    transition: background 0.4s ease;
+}
+
+#itemsTable tr.highlighted td {
+    color: #e0e7ff;
+}
+
 .no-items {
     font-size: 13px;
     color: #9aa4d8;
@@ -547,7 +561,6 @@ body {
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
-        <input id="treeSearch" class="sidebar-input" placeholder="Filter tree...">
         <div class="tree-scroll">
             <ul id="tree"></ul>
         </div>
@@ -670,16 +683,88 @@ body {
 
 let currentNode = null;
 let fullTree = null;
+let highlightItemId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Clear any leftover highlight classes on every page load / refresh
+    document.querySelectorAll('#itemsBody tr.highlighted').forEach(row => {
+        row.classList.remove('highlighted');
+    });
+
+    // Parse highlight param
+    const params = new URLSearchParams(window.location.search);
+    const highlight = params.get('highlight');
+    if (highlight && highlight.startsWith('item-')) {
+        highlightItemId = highlight.replace('item-', '');
+        console.log("Highlight requested for item ID:", highlightItemId);
+    } else {
+        highlightItemId = null; // explicit reset on normal load
+    }
+
     loadTree();
     setupSearch();
     setupForm();
     setupIncoming();
-    setupSubmitItem(); // wire submit handler for incoming/new-item submit button
+    setupSubmitItem();
+
     const takeBtn = document.getElementById('takeSelectedBtn');
     if (takeBtn) takeBtn.onclick = takeSelected;
+
+    // The interval check can stay, but it's now redundant with the cleanup above
+    if (highlightItemId) {
+        const checkTreeInterval = setInterval(() => {
+            if (fullTree) {
+                clearInterval(checkTreeInterval);
+                autoJumpToItemNode(highlightItemId);
+            }
+        }, 300);
+    }
 });
+
+// New function: jump to the node's parent and highlight item
+async function autoJumpToItemNode(itemId) {
+    try {
+        const res = await fetch(`database/get_item_node.php?id=${itemId}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+
+        if (data.error) {
+            console.warn("Could not find node for item:", data.error);
+            return;
+        }
+
+        const nodeId = String(data.hierarchy_id);
+        console.log("Found node for item:", nodeId);
+
+        // Find the node object in the tree
+        const targetNode = findNodeById(fullTree, nodeId);
+
+        if (targetNode) {
+            console.log("Auto-selecting node:", targetNode.name);
+            selectNode(targetNode);
+            // → this calls loadItems() → renderItems() → highlight happens there
+        } else {
+            console.warn("Node ID from DB not found in tree:", nodeId);
+        }
+    } catch (err) {
+        console.error("Failed to auto-jump to item node:", err);
+    }
+}
+
+// Helper: find node by ID in the tree structure
+function findNodeById(nodes, targetId) {
+    for (const node of nodes) {
+        if (String(node.id) === targetId) {
+            return node;
+        }
+        if (node.children && node.children.length) {
+            const found = findNodeById(node.children, targetId);
+            if (found) return found;
+        }
+    }
+    return null;
+}
 
 // ---------- TREE ----------
 function loadTree() {
@@ -694,25 +779,28 @@ function loadTree() {
 function renderTree(tree) {
     const ul = document.getElementById("tree");
     ul.innerHTML = "";
-    
+
     tree.forEach(n => ul.appendChild(renderNode(n, null)));
 
-    if (tree.length > 0) {
+    // ────────────────────────────────────────
+    // Handle highlight/jump **after** full render
+    // ────────────────────────────────────────
+    if (highlightItemId) {
+        autoJumpToItemNode(highlightItemId);
+        // Do NOT clear highlightItemId here anymore
+    } else if (tree.length > 0) {
+        // Normal startup behavior
         const firstNode = tree[0];
         selectNode(firstNode);
 
         const firstLi = document.querySelector(`#tree li[data-id="${firstNode.id}"]`);
         if (firstLi) {
             firstLi.classList.add("selected");
-
-            if (firstNode.children && firstNode.children.length > 0) {
+            if (firstNode.children?.length > 0) {
                 firstLi.classList.remove("tree-collapsed");
                 const arrow = firstLi.querySelector(".tree-arrow");
                 if (arrow) arrow.textContent = "▼";
             }
-        }
-
-        if (firstLi) {
             firstLi.scrollIntoView({ behavior: "smooth", block: "start" });
         }
     }
@@ -768,31 +856,44 @@ function renderNode(node, parent) {
 function expandPathToNode(targetNode) {
     if (!targetNode) return;
 
-    let current = targetNode;
-    const toExpand = [];
-
-    // Collect all parents up to root
-    while (current && current.parent) {
-        toExpand.push(current.parent);
-        current = current.parent;
+    // Build path from root → target (inclusive)
+    const pathFromRoot = [];
+    let curr = targetNode;
+    while (curr) {
+        pathFromRoot.unshift(curr);
+        curr = curr.parent;
     }
 
-    // Expand from root toward the target
-    toExpand.reverse().forEach(ancestor => {
-        const li = document.querySelector(`#tree li[data-id="${ancestor.id}"]`);
-        if (li && li.classList.contains("tree-collapsed")) {
-            li.classList.remove("tree-collapsed");
-            const arrow = li.querySelector(".tree-arrow");
-            if (arrow) arrow.textContent = "▼";
+    // Expand step-by-step from root downward
+    pathFromRoot.forEach((node, index) => {
+        const li = document.querySelector(`#tree li[data-id="${node.id}"]`);
+        if (!li) {
+            console.warn(`Cannot expand — missing li for node ${node.id}`);
+            return;
+        }
+
+        // Expand every node except possibly the last one (optional — you can expand target too)
+        if (index < pathFromRoot.length - 1 || true) {   // ← change 'true' to 'false' if you don't want target expanded
+            if (li.classList.contains("tree-collapsed")) {
+                li.classList.remove("tree-collapsed");
+                const arrow = li.querySelector(".tree-arrow");
+                if (arrow) arrow.textContent = "▼";
+            }
         }
     });
 
-    // Scroll the selected node into view
-    const selectedLi = document.querySelector(`#tree li[data-id="${targetNode.id}"]`);
-    if (selectedLi) {
-        selectedLi.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-}   
+    // Give DOM a moment to render children / compute layout
+    setTimeout(() => {
+        const targetLi = document.querySelector(`#tree li[data-id="${targetNode.id}"]`);
+        if (targetLi) {
+            targetLi.scrollIntoView({
+                behavior: "smooth",
+                block: "center",     // better visibility
+                inline: "nearest"
+            });
+        }
+    }, 80);   // ← 50–150 ms is usually enough
+}
 
 function selectNode(node) {
 currentNode = node;
@@ -933,6 +1034,7 @@ function renderItems(items) {
 
     items.forEach(item => {
         const tr = document.createElement("tr");
+        tr.dataset.itemId = item.id;
 
         tr.innerHTML = `
             <td><input type="checkbox" class="item-select" data-id="${item.id}"></td>
@@ -947,6 +1049,38 @@ function renderItems(items) {
 
         body.appendChild(tr);
     });
+
+    // Highlight + clean URL
+    if (highlightItemId) {
+        setTimeout(() => {
+            const row = body.querySelector(`tr[data-item-id="${highlightItemId}"]`);
+            if (row) {
+                // Safety: remove any previous highlights
+                document.querySelectorAll('#itemsBody tr.highlighted').forEach(r => {
+                    r.classList.remove('highlighted');
+                });
+
+                // Apply steady highlight
+                row.classList.add('highlighted');
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                console.log(`Item ${highlightItemId} highlighted`);
+
+                // Remove ?highlight=... from the URL (clean address bar)
+                if (window.history && window.history.replaceState) {
+                    const cleanUrl = window.location.pathname + (window.location.hash || '');
+                    window.history.replaceState({}, document.title, cleanUrl);
+                    console.log("[URL] Highlight parameter removed");
+                }
+
+                // Clear the flag so refresh starts clean
+                highlightItemId = null;
+            } else {
+                console.warn(`Row for item ${highlightItemId} not found`);
+                highlightItemId = null;
+            }
+        }, 400);
+    }
 }
 
 function clearItems() {
@@ -1237,6 +1371,41 @@ function submitItem() {
         alert("Item added.");
     });
 }
+
+// ─── Highlight row from URL param on load ──────────────────────────────
+function highlightRowFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const highlight = params.get('highlight');
+
+    if (!highlight || !highlight.startsWith('item-')) return;
+
+    const itemId = highlight.replace('item-', '');
+    const row = document.querySelector(`#itemsBody tr:has([data-id="${itemId}"])`);
+
+    if (row) {
+        // Add highlight class
+        row.classList.add('highlighted');
+
+        // Smooth scroll to the row (centered in view if possible)
+        setTimeout(() => {
+            row.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',     // tries to center vertically
+                inline: 'nearest'
+            });
+
+            // Optional: flash / pulse effect
+            row.style.transition = 'background 1.2s';
+            setTimeout(() => {
+                row.classList.remove('highlighted');
+                void row.offsetWidth; // force reflow
+                row.classList.add('highlighted');
+            }, 300);
+        }, 600); // small delay so table is rendered
+    }
+}
+
+
 
 </script>
 
