@@ -89,3 +89,67 @@ UPDATE items
 SET rfid = '3820456000'
 WHERE name = 'Compressed Waste Block 5kg'
 LIMIT 1;
+
+
+** SQL CHUNK 3 FIX CTB SPECIFICATIONS AND HIERACHY ***
+
+
+ALTER TABLE hierarchy
+ADD COLUMN ctb_type VARCHAR(50) DEFAULT NULL,
+ADD COLUMN capacity_liters DECIMAL(7,2) DEFAULT NULL;
+
+CREATE TABLE IF NOT EXISTS ctb_specifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ctb_type VARCHAR(50) NOT NULL,
+    description VARCHAR(255),
+    capacity_liters DECIMAL(7,2) NOT NULL,
+    max_weight_kg DECIMAL(7,2),
+    length_cm DECIMAL(6,2),
+    width_cm DECIMAL(6,2),
+    height_cm DECIMAL(6,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY (ctb_type)
+);
+
+INSERT INTO ctb_specifications (ctb_type, description, capacity_liters)
+VALUES 
+('CTB-0.5','Half-size CTB',10.0),
+('CTB-1.0','Standard CTB',20.0),
+('CTB-2.0','Double CTB',38.0),
+('CTB-4.0','Quad CTB',75.0),
+('CTB-6.0','Six-unit CTB',110.0),
+('CTB-8.0','Eight-unit CTB',150.0),
+('CTB-10.0','Ten-unit CTB',190.0),
+('STRIP','Strip container',5.0),
+('POUCH','Pouch container',8.0),
+('SLEEVE','Sleeve container',12.0),
+('CASE','Case container',15.0),
+('STACK','4-meter stack',4.0)
+ON DUPLICATE KEY UPDATE capacity_liters = VALUES(capacity_liters);
+
+UPDATE hierarchy
+SET ctb_type = 'CTB-1.0'
+WHERE name LIKE '%SUB%' AND (ctb_type IS NULL OR ctb_type = '');
+
+UPDATE hierarchy
+SET ctb_type = 'POUCH'
+WHERE name LIKE '%Pouch%' AND (ctb_type IS NULL OR ctb_type = '');
+
+UPDATE hierarchy
+SET ctb_type = 'STRIP'
+WHERE name LIKE '%Strip%' AND (ctb_type IS NULL OR ctb_type = '');
+
+UPDATE hierarchy
+SET ctb_type = 'CASE'
+WHERE name LIKE '%Food Package%' AND (ctb_type IS NULL OR ctb_type = '');
+
+UPDATE hierarchy
+SET ctb_type = 'STACK'
+WHERE name IN ('S1','S2','S3','C1','C2');
+
+UPDATE hierarchy h
+JOIN ctb_specifications s ON h.ctb_type = s.ctb_type
+SET h.capacity_liters = s.capacity_liters;
+
+
+
