@@ -676,7 +676,7 @@ select{
 
   <!-- Top Nav (swap hrefs to your real pages) -->
   <nav class="topnav">
-    <a href="index.php">Home</a>
+    <a href="dashboard.php">Home</a>
     <a href="schedule_orders.php" class="active">Schedule Orders</a>
     <a href="inventory.php">Inventory</a>
     <a href="contracts.php">Contracts</a>
