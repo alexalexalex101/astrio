@@ -939,11 +939,8 @@ function showCTBCards(children) {
         const backCard = document.createElement("div");
         backCard.className = "back-card";
         backCard.textContent = "Back to " + currentNode.parent.name;
-        
-        backCard.onclick = () => {
-            selectNode(currentNode.parent);
-        };
-        
+
+        backCard.onclick = () => selectNode(currentNode.parent);
         container.appendChild(backCard);
     }
 
@@ -956,6 +953,21 @@ function showCTBCards(children) {
         const card = document.createElement("div");
         card.className = "ctb-card";
 
+        // Build remaining bar ONLY for leaf nodes with items
+        let barHTML = "";
+        if (kids === 0 && items > 0) {
+            barHTML = `
+                <div class="remaining-bar">
+                    <div class="remaining-fill" id="fill-${child.id}"></div>
+                </div>
+
+                <div class="remaining-row">
+                    <span class="remaining-label">Remaining</span>
+                    <span class="remaining-percent" id="percent-${child.id}">${remaining}%</span>
+                </div>
+            `;
+        }
+
         card.innerHTML = `
             <div class="ctb-title">${child.name}</div>
             <div class="ctb-breadcrumb">${buildPath(child)}</div>
@@ -965,20 +977,16 @@ function showCTBCards(children) {
                 <span>Items: ${items}</span>
             </div>
 
-            <div class="remaining-bar">
-                <div class="remaining-fill" id="fill-${child.id}"></div>
-            </div>
-
-            <div class="remaining-row">
-                <span class="remaining-label">Remaining</span>
-                <span class="remaining-percent" id="percent-${child.id}">${remaining}%</span>
-            </div>
+            ${barHTML}
         `;
 
         card.onclick = () => selectNode(child);
         container.appendChild(card);
 
-        animateRemaining(child.id, remaining);
+        // Only animate if bar exists
+        if (kids === 0 && items > 0) {
+            animateRemaining(child.id, remaining);
+        }
     });
 }
 
