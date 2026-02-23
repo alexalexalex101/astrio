@@ -155,8 +155,8 @@ body {
     color: #ffcc66 !important;   /* yellow */
     font-weight: 600;
 }
-.remaining-okay
-    color: #66ff99 !important;   /* fresh green */
+.remaining-okay{
+    color: #66ff99 !important;   /* green */
     font-weight: 600;
 }
 /* ============================
