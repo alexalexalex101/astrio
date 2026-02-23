@@ -64,14 +64,7 @@ $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 /* ------------------------------
    PAGE BACKGROUND
 ------------------------------ */
-body {
-  background: #000 url('images/space.avif') center / cover no-repeat fixed;
-  color: white;
-  font-family: "League Spartan", sans-serif;
-  margin: 0;
-  height: 100vh;
-  overflow: hidden;
-}
+
 
 /* ------------------------------
    MAIN PLANET (LESS BRIGHT)
@@ -80,8 +73,8 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(75vw, 950px);
-  height: min(75vw, 950px);
+  width: min(75vw, 1200px);
+  height: min(75vw, 1200px);
   transform: translate(-50%, -50%);
   border-radius: 50%;
 
@@ -113,6 +106,8 @@ body {
 .planet-content {
   width: 90%;
   text-align: center;
+  font-family:"League Spartan", sans-serif;
+  color: #ffffff;
 }
 
 /* Title */
@@ -135,6 +130,7 @@ body {
   border-radius: 12px;
   background: rgba(12,18,44,0.85);
   box-shadow: 0 0 12px rgba(75,83,185,0.5);
+  font-family: "League Spartan", sans-serif;
 }
 
 table {
@@ -166,6 +162,7 @@ tbody tr:hover {
   background-color: rgba(75, 83, 185, 0.25);
   transition: 0.3s;
 }
+
 
 /* ------------------------------
    FORM
@@ -217,7 +214,7 @@ tbody tr:hover {
 <div class="main-planet">
 <div class="planet-content">
 
-<h2 class="page-title">CONTRACT MANAGEMENT</h2>
+<h2 class="page-title">Contract Management</h2>
 
 <!-- ADD FORM -->
 <div class="form-container" id="formcontainer">
@@ -247,7 +244,7 @@ tbody tr:hover {
 <option value="Expired">Expired</option>
 </select>
 
-<button type="submit" name="add_contract">Add Contract</button>
+<button type="submit" name="add_contract" style="font-family: 'League Spartan';font-weight:600;margin-top:1rem">Add Contract</button>
 </form>
 </div>
 

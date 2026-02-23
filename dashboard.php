@@ -14,7 +14,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mission Control — Dashboard</title>
     <link rel="stylesheet" href="default.css">
-    <link rel="stylesheet" href="https://use.typekit.net/pen4uct.css">
     <style>
         :root {
             --accent: #4b53b9;
@@ -35,14 +34,7 @@
             overflow: hidden;
         }
 
-        .nasalogo {
-            height: 8rem;
-            position: fixed;
-            top: 1.5rem;
-            left: 1.5rem;
-            z-index: 100;
-            filter: drop-shadow(0 0 12px rgba(255,255,255,0.18));
-        }
+
 
         #logoutBtn {
             position: fixed;

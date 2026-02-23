@@ -102,7 +102,6 @@ if (!isset($_SESSION['user'])) {
         }
 
         #details-panel h3 {
-            margin: 0 0 12px 0;
             font-size: 18px;
         }
 
@@ -115,6 +114,7 @@ if (!isset($_SESSION['user'])) {
             width: 100%;                     /* full width of container */
             box-sizing: border-box;          /* prevents padding overflow */
             transition: all 0.2s ease;
+            margin-bottom: 1rem;
         }
 
         /* Hover & highlighted states */
@@ -340,38 +340,47 @@ const mermaidDiv    = document.getElementById('mermaid-output');
 const currentNodeEl = document.getElementById('current-node');
 const pathEl        = document.getElementById('path');
 const itemsList     = document.getElementById('items-list');
-const backBtn       = document.getElementById('back-btn');
 
 async function loadAndRender() {
     try {
         const res = await fetch("database/get_hierarchy.php");
-        if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
 
         const rawText = await res.text();
-        console.log("RAW RESPONSE from get_hierarchy.php:", rawText);
-
         let parsedData;
         try {
             parsedData = JSON.parse(rawText);
-        } catch (parseError) {
-            console.error("JSON parse error:", parseError);
-            console.error("Invalid content:", rawText.substring(0, 500));
-            mermaidDiv.innerHTML = '<p style="color:#ff6b6b; text-align:center;">Invalid data from server (not valid JSON)</p>';
+        } catch (e) {
+            console.error("JSON parse error:", e, rawText.substring(0, 300));
+            mermaidDiv.innerHTML = '<p style="color:#ff6b6b">Invalid server response</p>';
             return;
         }
 
         treeData = parsedData;
 
-        if (Array.isArray(treeData) && treeData.length > 0) {
-            console.log("treeData LOADED — length:", treeData.length);
+        // ─── CRITICAL: Attach .parent references ───────────────────────
+        function attachParents(nodes, parent = null) {
+            for (const node of nodes) {
+                node.parent = parent;           // ← this line is usually missing!
+                if (node.children && Array.isArray(node.children)) {
+                    attachParents(node.children, node);
+                }
+            }
+        }
+
+        if (Array.isArray(treeData)) {
+            attachParents(treeData, null);   // start with root nodes having parent = null
+        }
+
+        if (treeData?.length > 0) {
             renderMermaid(treeData);
-            selectNode(treeData[0].id);
+            selectNode(treeData[0].id);      // auto-select root
         } else {
-            mermaidDiv.innerHTML = '<p style="color:#ffaaaa; text-align:center;">No hierarchy data available</p>';
+            mermaidDiv.innerHTML = '<p>No hierarchy data</p>';
         }
     } catch (err) {
-        console.error("loadAndRender failed:", err);
-        mermaidDiv.innerHTML = `<p style="color:#ff6b6b; text-align:center;">Failed to load hierarchy: ${err.message}</p>`;
+        console.error("Load failed:", err);
+        mermaidDiv.innerHTML = `<p style="color:#ff6b6b">Error: ${err.message}</p>`;
     }
 }
 
@@ -506,14 +515,15 @@ function centerOnNode(nodeEl, duration = 700) {
 }
 
 function buildPath(node) {
-    if (!node) return "";
+    if (!node) return "—";
+
     const parts = [];
     let current = node;
     while (current) {
         parts.unshift(current.name);
         current = current.parent;
     }
-    return parts.join(" → ");
+    return parts.join(" › ");
 }
 
 function findNode(nodes, id) {
@@ -555,7 +565,6 @@ async function selectNode(nodeId) {
     if (!node) {
         currentNodeEl.textContent = "Unknown location";
         pathEl.textContent = "";
-        backBtn.style.display = 'none';
         itemsList.innerHTML = "<span style='color:#ff6b6b'>Location not found</span>";
         return;
     }
@@ -564,10 +573,6 @@ async function selectNode(nodeId) {
     currentNodeEl.textContent = node.name;
     pathEl.textContent = buildPath(node);
 
-    backBtn.style.display = node.parent ? 'block' : 'none';
-    if (node.parent) {
-        backBtn.textContent = `↑ Back to ${node.parent.name}`;
-    }
 
     itemsList.innerHTML = "Loading...";
 
@@ -625,25 +630,7 @@ async function selectNode(nodeId) {
 }
 
 // Back button handler (outside renderMermaid)
-backBtn.addEventListener('click', () => {
-    if (!currentNodeId) return;
 
-    function findParent(nodes, targetId) {
-        for (const node of nodes) {
-            if (node.id == targetId) return node.parent;
-            if (node.children) {
-                const found = findParent(node.children, targetId);
-                if (found !== undefined) return found;
-            }
-        }
-        return null;
-    }
-
-    const parent = findParent(treeData, currentNodeId);
-    if (parent) {
-        selectNode(parent.id);
-    }
-});
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {

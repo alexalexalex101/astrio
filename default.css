@@ -7,7 +7,7 @@
 html, body {
     height: 100%;
     background-color: #000000;
-    overflow: hidden;
+    overflow:hidden;
     background-image: url(images/space.avif);
 }
 
@@ -18,7 +18,7 @@ html, body {
 
 @font-face {
   font-family: "nasalization";
-  src: url('fonts/nasalization\ rg.ttf');
+  src: url('fonts/nasalization-rg.ttf');
 }
 
 .uppercase {
@@ -48,10 +48,12 @@ html, body {
 }
 
 .nasalogo {
+    height: 8rem;
     position: fixed;
-    height: 10rem;
-    top: 1rem;
-    left:1rem;
+    top: 1.5rem;
+    left: 1.5rem;
+    z-index: 100;
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.18));
 }
 
 #backbutton {
@@ -110,7 +112,7 @@ html, body {
     flex-direction: column;
     width: 100%;
 }
-.planetcenter .loginbuttons {
+.loginbuttons {
     width:28.2625rem;
     height:6rem;
     margin-top:1rem;
@@ -122,11 +124,13 @@ html, body {
     font-weight: 300;
     font-size: 2rem;
     -webkit-box-shadow: inset -1px 3px 8px 5px #1F87FF, 2px 5px 16px 0px #0B325E, 5px 5px 15px 5px rgba(198,115,255,0); 
-box-shadow: inset -1px 3px 8px 5px #1F87FF, 2px 5px 16px 0px #0B325E, 5px 5px 15px 5px rgba(198,115,255,0);
+    box-shadow: inset -1px 3px 8px 5px #1F87FF, 2px 5px 16px 0px #0B325E, 5px 5px 15px 5px rgba(198,115,255,0);
+    transition: all 0.3s ease;
 }
 
-.planetcenter .loginbuttons:hover {
+.loginbuttons:hover {
     cursor: pointer;
+    background-color: #1752c0ff;
 }
 
 .navcontainer {

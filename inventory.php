@@ -27,6 +27,7 @@ body {
     left: 20px;
     width: 120px;
     z-index: 2000;
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.18));
 }
 
 /* LOGOUT BUTTON */
@@ -204,7 +205,7 @@ body {
    ============================ */
 
 .sidebar {
-    width: 260px; /* more space but still slim */
+    width: 350px; /* more space but still slim */
     background: rgba(8, 12, 20, 0.92);
     padding: 18px 14px;
     border-right: 1px solid rgba(120,150,255,0.25);
@@ -376,6 +377,7 @@ body {
     display: flex;
     gap: 10px;
     margin-bottom: 18px;
+    font-family:"League Spartan", sans-serif;
 }
 
 .search-input {
@@ -386,16 +388,18 @@ body {
     border-radius: 6px;
     color: #fff;
     font-size: 13px;
+    font-family:"League Spartan", sans-serif;
 }
 
 .control-btn {
     padding: 8px 12px;
-    background: rgba(255,255,255,0.06);
+    background: rgba(76, 32, 235, 0.4);
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 6px;
     color: #fff;
     cursor: pointer;
     font-size: 13px;
+    font-family:"League Spartan", sans-serif;
 }
 
 /* CTB CARDS */
@@ -641,6 +645,33 @@ body {
 .searchTable .searchCaption {
     margin-bottom: 1rem;
     font-weight: bold;
+}
+
+/* Pretty scrollbar for MAIN PANEL — matches tree-scroll style */
+.main-panel {
+    /* already has overflow-y: auto; — we keep that */
+    scrollbar-width: thin;          /* Firefox support */
+    scrollbar-color: rgba(120,150,255,0.45) rgba(255,255,255,0.05);
+}
+
+/* Webkit browsers (Chrome, Edge, Safari, Opera) */
+.main-panel::-webkit-scrollbar {
+    width: 8px;                     /* same thin width as sidebar */
+}
+
+.main-panel::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);   /* very dark subtle track */
+    border-radius: 10px;
+}
+
+.main-panel::-webkit-scrollbar-thumb {
+    background: rgba(120,150,255,0.45);   /* same blue-ish thumb color */
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.15);   /* subtle edge glow */
+}
+
+.main-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(150,180,255,0.75);   /* brighter on hover — same as sidebar */
 }
 
 </style>

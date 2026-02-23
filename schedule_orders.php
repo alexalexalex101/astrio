@@ -270,11 +270,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NASA Schedule Orders - Solar System</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="default.css">
 
 <style>
 /* Base Reset */
-* { margin:0; padding:0; box-sizing:border-box; font-family:'DM Sans', sans-serif; }
+* { margin:0; padding:0; box-sizing:border-box; font-family: "League Spartan", sans-serif; }
+
+html,body {
+  background-image: none;
+  background-color: transparent;
+}
+
 :root{
   --cyan:#00b7ff;
   --cyan2:#00e5ff;
@@ -522,11 +528,12 @@ main{
   backdrop-filter: blur(6px);
   box-shadow: 0 18px 55px rgba(0,0,0,0.55);
 }
-.header{ text-align:center; padding: 0.4rem 0 1.2rem; }
+.header{ text-align:center; padding: 0.4rem 0 1.2rem; font-family:"League Spartan", sans-serif;}
 h1{
   font-size: clamp(2rem, 3.2vw, 2.7rem);
   text-shadow: 0 0 14px rgba(0, 229, 255, 0.35), 0 0 34px rgba(0, 183, 255, 0.18);
   letter-spacing: 0.02em;
+  font-family:"Nasalization", sans-serif;
 }
 .subhead{
   margin-top: 0.6rem;
@@ -675,17 +682,14 @@ select{
   </div>
 
   <!-- Top Nav (swap hrefs to your real pages) -->
-  <nav class="topnav">
-    <a href="dashboard.php">Home</a>
-    <a href="schedule_orders.php" class="active">Schedule Orders</a>
-    <a href="inventory.php">Inventory</a>
-    <a href="contracts.php">Contracts</a>
-  </nav>
+    <a href="dashboard.php">
+        <img src="images/NASA-Logo.png" alt="NASA Logo" class="nasalogo">
+    </a>
 
   <main>
     <div class="header">
       <h1>Schedule Orders</h1>
-      <div class="subhead">Plan shipments between the Space Station core and Earth — priority-routed and time-locked.</div>
+      <div class="subhead">Plan shipments between the Space Station core and Earth.</div>
 
       <?php if ($success || $error): ?>
         <div class="alerts" aria-live="polite">
