@@ -42,7 +42,7 @@ while ($row = $itemRes->fetch_assoc()) {
     $itemsByNode[$hid][] = $row;
 }
 
-// 3. Build tree (children are full node objects)
+// 3. Build tree
 $tree = [];
 foreach ($flat as $id => &$node) {
     if ($node['parent_id']) {
@@ -52,13 +52,15 @@ foreach ($flat as $id => &$node) {
     }
 }
 
-// 4. Compute used volume + remaining percent
+// 4. Compute usage
 foreach ($flat as $id => &$node) {
 
     $capacity = (float)($node['capacity_liters'] ?? 0);
     $node['item_count'] = isset($itemsByNode[$id]) ? count($itemsByNode[$id]) : 0;
 
-    // STACKS (S1, S2, S3, C1, C2) – 4m long
+    // ------------------------------------------------------------
+    // STACK LOGIC (4 meters)
+    // ------------------------------------------------------------
     if ($node['ctb_type'] === 'STACK') {
 
         $usedMeters = 0.0;
@@ -75,29 +77,47 @@ foreach ($flat as $id => &$node) {
         continue;
     }
 
-    // CTB logic (nested CTBs by size, direct children only)
-    if ($capacity > 0 && !empty($node['children']) && strpos($node['ctb_type'], 'CTB') === 0) {
+    // ------------------------------------------------------------
+    // FIXED CTB LOGIC: CTBs count nested CTBs + microcontainers + items
+    // ------------------------------------------------------------
+    if ($capacity > 0 && strpos($node['ctb_type'], 'CTB') === 0) {
 
         $used = 0.0;
 
-        $childCTB = null;
-        if ($node['ctb_type'] === 'CTB-4.0') $childCTB = 'CTB-2.0';
-        if ($node['ctb_type'] === 'CTB-2.0') $childCTB = 'CTB-1.0';
-        if ($node['ctb_type'] === 'CTB-1.0') $childCTB = 'CTB-0.5';
-
+        // 1. Count nested CTBs
         foreach ($node['children'] as $childNode) {
-            if ($childCTB && $childNode['ctb_type'] === $childCTB) {
-                $used += (float)$childNode['capacity_liters'];
+            if (strpos($childNode['ctb_type'], 'CTB-') === 0) {
+                $used += floatval($childNode['capacity_liters']);
             }
         }
 
+        // 2. Count microcontainers
+        $microContainers = ['POUCH', 'STRIP', 'SLEEVE', 'CASE'];
+        foreach ($node['children'] as $childNode) {
+            if (in_array($childNode['ctb_type'], $microContainers)) {
+                $used += floatval($childNode['capacity_liters']);
+            }
+        }
+
+        // 3. Count items inside this CTB
+        if (isset($itemsByNode[$id])) {
+            foreach ($itemsByNode[$id] as $item) {
+                $vol = floatval($item['volume_liters']);
+                $remaining = floatval($item['remaining_percent']) / 100.0;
+                $used += ($vol * $remaining);
+            }
+        }
+
+        // 4. Final calculation
         $node['used_volume'] = round($used, 2);
         $remainingPercent = $capacity > 0 ? max(0, 100 - (($used / $capacity) * 100)) : 100;
         $node['remaining'] = round($remainingPercent, 2);
         continue;
     }
 
-    // Strip / pouch / sleeve / case – item volume
+    // ------------------------------------------------------------
+    // MICROCONTAINERS (POUCH, STRIP, SLEEVE, CASE)
+    // ------------------------------------------------------------
     if ($capacity > 0 && $node['item_count'] > 0) {
 
         $used = 0.0;
@@ -113,6 +133,7 @@ foreach ($flat as $id => &$node) {
         continue;
     }
 
+    // Default
     $node['remaining'] = 100;
 }
 
