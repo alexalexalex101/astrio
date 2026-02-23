@@ -1079,16 +1079,17 @@ function renderItems(items) {
         const tr = document.createElement("tr");
         tr.dataset.itemId = item.id;
 
-        tr.innerHTML = `
-            <td><input type="checkbox" class="item-select" data-id="${item.id}"></td>
-            <td>${item.name}</td>
-            <td>${item.type}</td>
-            <td>${item.expiry || ""}</td>
-            <td>${item.calories || ""}</td>
-            <td>${shortenLocation(item.location || "")}</td>
-            <td>${item.rfid || ""}</td>
-            <td>${(item.remaining_percent ?? 100)}%</td>
-        `;
+       tr.innerHTML = `
+        <td><input type="checkbox" class="item-select" data-id="${item.id}"></td>
+        <td>${item.name}</td>
+        <td>${item.type}</td>
+        <td>${item.expiry_date || "-"}</td>
+        <td>${item.calories || ""}</td>
+        <td>${shortenLocation(item.location || "")}</td>
+        <td>${item.rfid || ""}</td>
+        <td>${(item.remaining_percent ?? 100)}%</td>
+    `;
+
 
         body.appendChild(tr);
     });
