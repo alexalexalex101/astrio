@@ -128,24 +128,37 @@ body {
     font-size: 18px;
 }
 .expiry-expired {
-    color: #ff4d4d;       /* bright red */
+    color: #ff4d4d !important;
     font-weight: 700;
 }
 
 .expiry-critical {
-    color: #ff6b6b;       /* red-orange */
+    color: #ff6b6b !important;
     font-weight: 600;
 }
 
 .expiry-warning {
-    color: #ffcc66;       /* yellowish */
+    color: #ffcc66 !important;
     font-weight: 600;
 }
+
 .expiry-fresh {
     color: #66ff99;       /* fresh green */
     font-weight: 600;
 }
+.remaining-empty {
+    color: #ff4d4d !important;   /* bright red */
+    font-weight: 700;
+}
 
+.remaining-low {
+    color: #ffcc66 !important;   /* yellow */
+    font-weight: 600;
+}
+.remaining-okay
+    color: #66ff99 !important;   /* fresh green */
+    font-weight: 600;
+}
 /* ============================
    NEW MISSION CONTROL SIDEBAR
    ============================ */
@@ -1097,82 +1110,99 @@ function renderItems(items) {
         const tr = document.createElement("tr");
         tr.dataset.itemId = item.id;
 
-    // Compute expiry color
-// Compute expiry color
-let expiryDisplay = "-";
-let expiryClass = "";
+        /* ============================
+           EXPIRY WARNING (FIXED)
+        ============================ */
+        let expiryDisplay = item.expiry_date || "-";
+        let expiryClass = "";
 
-if (item.expiry_date) {
-    const today = new Date();
+        if (item.expiry_date) {
+            // Normalize formats like "2026/02/23", "2026-02-23 00:00:00", etc.
+            const cleanDate = item.expiry_date.replace(/\//g, "-").split(" ")[0];
+            const [year, month, day] = cleanDate.split("-");
 
-    // Parse YYYY-MM-DD safely (no timezone shift)
-    const [year, month, day] = item.expiry_date.split("-");
-    const exp = new Date(year, month - 1, day);
+            if (year && month && day) {
+                const exp = new Date(year, month - 1, day);
+                const today = new Date();
+                const diffDays = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
 
-    const diffDays = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+                if (!isNaN(diffDays)) {
+                    if (diffDays < 0) {
+                        expiryClass = "expiry-expired";
+                    } else if (diffDays <= 3) {
+                        expiryClass = "expiry-critical";
+                    } else if (diffDays <= 7) {
+                        expiryClass = "expiry-warning";
+                    }else{
+                        expiryClass = "expiry-fresh";
+                    }
 
-    expiryDisplay = item.expiry_date;
+                }
+            }
+        }
 
-    if (diffDays < 0) {
-        expiryClass = "expiry-expired";
-    } else if (diffDays <= 3) {
-        expiryClass = "expiry-critical";
-    } else if (diffDays <= 7) {
-        expiryClass = "expiry-warning";
-    }else{
-        expiryClass = "expiry-fresh";
-    }
-}
+        /* ============================
+           REMAINING WARNING
+        ============================ */
+        let remainingDisplay = (item.remaining_percent ?? 100) + "%";
+        let remainingClass = "";
 
+        if (item.remaining_percent !== null && item.remaining_percent !== undefined) {
+            const rem = Number(item.remaining_percent);
 
-    tr.innerHTML = `
-        <td><input type="checkbox" class="item-select" data-id="${item.id}"></td>
-        <td>${item.name}</td>
-        <td>${item.type}</td>
-        <td class="${expiryClass}">${expiryDisplay}</td>
-        <td>${item.calories || ""}</td>
-        <td>${shortenLocation(item.location || "")}</td>
-        <td>${item.rfid || ""}</td>
-        <td>${(item.remaining_percent ?? 100)}%</td>
-    `;
+            if (rem === 0) {
+                remainingClass = "remaining-empty";
+            } else if (rem <= 10) {
+                remainingClass = "remaining-low";
+            }else{
+                remainingClass = "remaining-okay";
+            }
+        }
 
-
+        /* ============================
+           BUILD TABLE ROW
+        ============================ */
+        tr.innerHTML = `
+            <td><input type="checkbox" class="item-select" data-id="${item.id}"></td>
+            <td>${item.name}</td>
+            <td>${item.type}</td>
+            <td class="${expiryClass}">${expiryDisplay}</td>
+            <td>${item.calories || ""}</td>
+            <td>${shortenLocation(item.location || "")}</td>
+            <td>${item.rfid || ""}</td>
+            <td class="${remainingClass}">${remainingDisplay}</td>
+        `;
 
         body.appendChild(tr);
     });
 
-    // Highlight + clean URL
+    /* ============================
+       HIGHLIGHT LOGIC (unchanged)
+    ============================ */
     if (highlightItemId) {
         setTimeout(() => {
             const row = body.querySelector(`tr[data-item-id="${highlightItemId}"]`);
             if (row) {
-                // Safety: remove any previous highlights
                 document.querySelectorAll('#itemsBody tr.highlighted').forEach(r => {
                     r.classList.remove('highlighted');
                 });
 
-                // Apply steady highlight
                 row.classList.add('highlighted');
                 row.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                console.log(`Item ${highlightItemId} highlighted`);
-
-                // Remove ?highlight=... from the URL (clean address bar)
                 if (window.history && window.history.replaceState) {
                     const cleanUrl = window.location.pathname + (window.location.hash || '');
                     window.history.replaceState({}, document.title, cleanUrl);
-                    console.log("[URL] Highlight parameter removed");
                 }
 
-                // Clear the flag so refresh starts clean
                 highlightItemId = null;
             } else {
-                console.warn(`Row for item ${highlightItemId} not found`);
                 highlightItemId = null;
             }
         }, 400);
     }
 }
+
 
 function clearItems() {
     document.getElementById("itemsBody").innerHTML = "";
