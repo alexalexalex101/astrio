@@ -1,14 +1,15 @@
 <?php
-    session_start();
-    if (!isset($_SESSION['user'])) {
-        header('Location: nasalogin.php');
-        exit;
-    }
-    $user = $_SESSION['user'];
-    $fullName = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
+session_start();
+if (!isset($_SESSION['user'])) {
+    header('Location: nasalogin.php');
+    exit;
+}
+$user = $_SESSION['user'];
+$fullName = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,7 +50,7 @@
             font-weight: 600;
             box-shadow: 0 0 18px var(--glow);
             backdrop-filter: blur(5px);
-            border: 1px solid rgba(180,180,255,0.15);
+            border: 1px solid rgba(180, 180, 255, 0.15);
             transition: all 0.28s ease;
             z-index: 100;
         }
@@ -72,7 +73,7 @@
             background: radial-gradient(circle at 32% 32%, #d6ecff 0%, #7faeff 28%, #355fc2 62%, #0c2560 100%);
             box-shadow:
                 0 0 70px rgba(160, 210, 255, 0.45),
-                inset 0 0 70px rgba(255,255,255,0.15),
+                inset 0 0 70px rgba(255, 255, 255, 0.15),
                 0 0 140px rgba(80, 130, 255, 0.35);
             z-index: 2;
             border: 3px solid rgba(160, 190, 255, 0.35);
@@ -92,9 +93,9 @@
 
         .welcome-title {
             font-family: "nasalization", sans-serif;
-            font-size: clamp(20px,2.8vw,5rem);
+            font-size: clamp(20px, 2.8vw, 5rem);
             color: #f4f9ff;
-            text-shadow: 0 0 18px rgba(240,248,255,0.6);
+            text-shadow: 0 0 18px rgba(240, 248, 255, 0.6);
             letter-spacing: 1.2px;
             line-height: 1.05;
             margin-bottom: 2rem;
@@ -149,7 +150,7 @@
             border: 3px solid rgba(160, 190, 255, 0.35);
             box-shadow:
                 0 0 12px rgba(120, 160, 255, 0.35),
-                inset 0 0 12px rgba(255,255,255,0.08);
+                inset 0 0 12px rgba(255, 255, 255, 0.08);
 
             transition: all 0.3s ease;
         }
@@ -159,22 +160,51 @@
             border-color: rgba(190, 210, 255, 0.6);
             box-shadow:
                 0 0 22px rgba(140, 180, 255, 0.6),
-                inset 0 0 18px rgba(255,255,255,0.18);
+                inset 0 0 18px rgba(255, 255, 255, 0.18);
             background: radial-gradient(circle at 35% 35%, #a9c8f5 0%, #628ae3 40%, #315fc4 75%, #16307a 100%);
         }
 
-        .orbit-moon:nth-child(1) { left: 10%;  top: 50%; transform: translate(-50%, -50%); }
-        .orbit-moon:nth-child(2) { left: 27%;  top: 66%; transform: translate(-50%, -50%); }
-        .orbit-moon:nth-child(3) { left: 50%;  top: 72%; transform: translate(-50%, -50%); }
-        .orbit-moon:nth-child(4) { left: 73%;  top: 66%; transform: translate(-50%, -50%); }
-        .orbit-moon:nth-child(5) { left: 90%;  top: 50%; transform: translate(-50%, -50%); }
-
-        .circle, .planetcenter, .navcontainer, #space1, #space2, #space3 {
-            display: none !important;
+        .orbit-moon:nth-child(1) {
+            left: 10%;
+            top: 50%;
+            transform: translate(-50%, -50%);
         }
 
+        .orbit-moon:nth-child(2) {
+            left: 27%;
+            top: 66%;
+            transform: translate(-50%, -50%);
+        }
+
+        .orbit-moon:nth-child(3) {
+            left: 50%;
+            top: 72%;
+            transform: translate(-50%, -50%);
+        }
+
+        .orbit-moon:nth-child(4) {
+            left: 73%;
+            top: 66%;
+            transform: translate(-50%, -50%);
+        }
+
+        .orbit-moon:nth-child(5) {
+            left: 90%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .circle,
+        .planetcenter,
+        .navcontainer,
+        #space1,
+        #space2,
+        #space3 {
+            display: none !important;
+        }
     </style>
 </head>
+
 <body>
 
     <a href="dashboard.php">
@@ -201,4 +231,5 @@
     </div>
 
 </body>
+
 </html>

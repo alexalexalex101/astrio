@@ -7,17 +7,19 @@ if (!isset($_SESSION['user'])) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inventory Hierarchy - Mermaid</title>
     <link rel="stylesheet" href="https://use.typekit.net/pen4uct.css">
-    
+
     <!-- Mermaid -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-    
+
     <style>
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             height: 100%;
@@ -64,29 +66,31 @@ if (!isset($_SESSION['user'])) {
             background: radial-gradient(circle at 50% 30%, #1a2030 0%, #0b111c 100%);
         }
 
-/* Add this to your <style> block */
-#mermaid-output svg {
-    min-width: 1400px;          /* or whatever feels good */
-    max-width: none !important;
-}
+        /* Add this to your <style> block */
+        #mermaid-output svg {
+            min-width: 1400px;
+            /* or whatever feels good */
+            max-width: none !important;
+        }
 
-.flowchart .node rect,
-.flowchart .node foreignObject {
-    min-width: 220px !important;
-}
+        .flowchart .node rect,
+        .flowchart .node foreignObject {
+            min-width: 220px !important;
+        }
 
 
 
-.flowchart .label {
-    font-size: 15px !important;
-}
+        .flowchart .label {
+            font-size: 15px !important;
+        }
 
 
         #details-panel {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            width: 380px;                    /* ← keep or adjust as needed */
+            width: 380px;
+            /* ← keep or adjust as needed */
             max-height: 60vh;
             overflow-y: auto;
             background: rgba(10, 14, 22, 0.92);
@@ -94,11 +98,14 @@ if (!isset($_SESSION['user'])) {
             padding: 16px 20px;
             border: 1px solid rgba(120, 150, 255, 0.35);
             backdrop-filter: blur(8px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             z-index: 20;
-            display: flex;                   /* ← added */
-            flex-direction: column;          /* ← ensures vertical stacking */
-            gap: 12px;                       /* ← nice spacing between cards */
+            display: flex;
+            /* ← added */
+            flex-direction: column;
+            /* ← ensures vertical stacking */
+            gap: 12px;
+            /* ← nice spacing between cards */
         }
 
         #details-panel h3 {
@@ -110,9 +117,12 @@ if (!isset($_SESSION['user'])) {
             background: rgba(20, 30, 50, 0.7);
             border: 1px solid rgba(90, 140, 255, 0.3);
             border-radius: 8px;
-            padding: 14px 16px;              /* slightly more padding */
-            width: 100%;                     /* full width of container */
-            box-sizing: border-box;          /* prevents padding overflow */
+            padding: 14px 16px;
+            /* slightly more padding */
+            width: 100%;
+            /* full width of container */
+            box-sizing: border-box;
+            /* prevents padding overflow */
             transition: all 0.2s ease;
             margin-bottom: 1rem;
         }
@@ -149,7 +159,8 @@ if (!isset($_SESSION['user'])) {
         .go-to-item-btn {
             font-family: "League Spartan", sans-serif;
             margin-top: 12px;
-            width: 100%;                    /* full width button looks better in column */
+            width: 100%;
+            /* full width button looks better in column */
             padding: 8px;
             background: #4f46e5;
             border: none;
@@ -178,418 +189,425 @@ if (!isset($_SESSION['user'])) {
             background: #e53e3e;
         }
 
-        
+
         /* Scrollbar styling */
         #details-panel::-webkit-scrollbar {
             width: 8px;
         }
+
         #details-panel::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 0.04);
         }
+
         #details-panel::-webkit-scrollbar-thumb {
-            background: rgba(120,150,255,0.5);
+            background: rgba(120, 150, 255, 0.5);
             border-radius: 4px;
         }
 
-.flowchart .node.selected rect {
-    fill: #2a4a8a !important;           /* darker blue fill */
-    stroke: #60a5fa !important;         /* bright blue border */
-    stroke-width: 3.5px !important;
-    filter: drop-shadow(0 0 10px #60a5fa88);
-    transition: all 0.18s ease;
-}
+        .flowchart .node.selected rect {
+            fill: #2a4a8a !important;
+            /* darker blue fill */
+            stroke: #60a5fa !important;
+            /* bright blue border */
+            stroke-width: 3.5px !important;
+            filter: drop-shadow(0 0 10px #60a5fa88);
+            transition: all 0.18s ease;
+        }
 
-.flowchart .node rect {
-    transition: all 0.18s ease;         /* smooth change */
-}
+        .flowchart .node rect {
+            transition: all 0.18s ease;
+            /* smooth change */
+        }
 
-/* Optional: subtle hover effect too */
-.flowchart .node:hover rect {
-    filter: brightness(1.15);
-}
-        
-
+        /* Optional: subtle hover effect too */
+        .flowchart .node:hover rect {
+            filter: brightness(1.15);
+        }
     </style>
-            <link rel="stylesheet" href="default.css">
+    <link rel="stylesheet" href="default.css">
 
 </head>
+
 <body>
 
-<div id="app">
+    <div id="app">
 
-    <div id= "header">
-        <div>
-            <div id="current-node">Select a location</div>
-            <div id="path"></div>
+        <div id="header">
+            <div>
+                <div id="current-node">Select a location</div>
+                <div id="path"></div>
+            </div>
+            <button id="back-btn" class="back-btn" style="display:none;">↑ Back</button>
+            <a href="dashboard.php"><img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo" style="top:5rem;"></a>
+
         </div>
-        <button id="back-btn" class="back-btn" style="display:none;">↑ Back</button>
-                    <a href="dashboard.php"><img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo" style="top:5rem;"></a>
 
-    </div>
+        <!-- Replace the entire <div id="mermaid-container"> ... </div> block with this -->
 
-<!-- Replace the entire <div id="mermaid-container"> ... </div> block with this -->
-
-<div id="mermaid-container">
-    <div id="mermaid-viewport" style="
+        <div id="mermaid-container">
+            <div id="mermaid-viewport" style="
         width: 100%;
         height: 100%;
         overflow: hidden;
         position: relative;
         cursor: grab;
     ">
-        <div id="mermaid-wrapper" style="
+                <div id="mermaid-wrapper" style="
             position: absolute;
             top: 0;
             left: 0;
             transform-origin: 0 0;
             will-change: transform;
         ">
-            <div id="mermaid-output"></div>
+                    <div id="mermaid-output"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="details-panel">
+            <h3>Items</h3>
+            <div id="items-list">Select a node to see items</div>
         </div>
     </div>
-</div>
 
-    <div id="details-panel">
-        <h3>Items</h3>
-        <div id="items-list">Select a node to see items</div>
-    </div>
-</div>
+    <script>
+        // Mermaid configuration
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            flowchart: {
+                curve: 'basis',
+                useMaxWidth: false,
+                htmlLabels: true,
+                nodeSpacing: 60,
+                rankSpacing: 100
+            }
+        });
 
-<script>
-// Mermaid configuration
-mermaid.initialize({
-    startOnLoad: false,
-    theme: 'dark',
-    flowchart: {
-        curve: 'basis',
-        useMaxWidth: false,
-        htmlLabels: true,
-        nodeSpacing: 60,
-        rankSpacing: 100
-    }
-});
+        // Global state - Pan + Zoom
+        const viewport = document.getElementById('mermaid-viewport');
+        const wrapper = document.getElementById('mermaid-wrapper');
 
-// Global state - Pan + Zoom
-const viewport = document.getElementById('mermaid-viewport');
-const wrapper = document.getElementById('mermaid-wrapper');
+        let scale = 1;
+        let panX = 0;
+        let panY = 80;
+        let isPanning = false;
+        let startX, startY;
 
-let scale = 1;
-let panX = 0;
-let panY = 80;
-let isPanning = false;
-let startX, startY;
-
-function updateTransform() {
-    wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-}
-
-viewport.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
-    isPanning = true;
-    startX = e.clientX - panX;
-    startY = e.clientY - panY;
-    viewport.style.cursor = 'grabbing';
-    e.preventDefault();
-});
-
-document.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    panX = e.clientX - startX;
-    panY = e.clientY - startY;
-    updateTransform();
-});
-
-document.addEventListener('mouseup', () => {
-    isPanning = false;
-    viewport.style.cursor = 'grab';
-});
-
-document.addEventListener('mouseleave', () => {
-    isPanning = false;
-    viewport.style.cursor = 'grab';
-});
-
-viewport.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const zoomSpeed = 0.15;
-    const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
-    const oldScale = scale;
-    scale = Math.max(0.3, Math.min(5, scale + delta));
-    const rect = viewport.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const factor = scale / oldScale;
-    panX = mouseX - (mouseX - panX) * factor;
-    panY = mouseY - (mouseY - panY) * factor;
-    updateTransform();
-});
-
-viewport.addEventListener('dblclick', () => {
-    scale = 1;
-    panX = 0;
-    panY = 0;
-    updateTransform();
-});
-
-viewport.style.cursor = 'grab';
-
-let treeData = null;
-let currentNodeId = null;
-
-const mermaidDiv    = document.getElementById('mermaid-output');
-const currentNodeEl = document.getElementById('current-node');
-const pathEl        = document.getElementById('path');
-const itemsList     = document.getElementById('items-list');
-
-async function loadAndRender() {
-    try {
-        const res = await fetch("database/get_hierarchy.php");
-        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-
-        const rawText = await res.text();
-        let parsedData;
-        try {
-            parsedData = JSON.parse(rawText);
-        } catch (e) {
-            console.error("JSON parse error:", e, rawText.substring(0, 300));
-            mermaidDiv.innerHTML = '<p style="color:#ff6b6b">Invalid server response</p>';
-            return;
+        function updateTransform() {
+            wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
         }
 
-        treeData = parsedData;
+        viewport.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            isPanning = true;
+            startX = e.clientX - panX;
+            startY = e.clientY - panY;
+            viewport.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
 
-        // ─── CRITICAL: Attach .parent references ───────────────────────
-        function attachParents(nodes, parent = null) {
+        document.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            panX = e.clientX - startX;
+            panY = e.clientY - startY;
+            updateTransform();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isPanning = false;
+            viewport.style.cursor = 'grab';
+        });
+
+        document.addEventListener('mouseleave', () => {
+            isPanning = false;
+            viewport.style.cursor = 'grab';
+        });
+
+        viewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomSpeed = 0.15;
+            const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
+            const oldScale = scale;
+            scale = Math.max(0.3, Math.min(5, scale + delta));
+            const rect = viewport.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const factor = scale / oldScale;
+            panX = mouseX - (mouseX - panX) * factor;
+            panY = mouseY - (mouseY - panY) * factor;
+            updateTransform();
+        });
+
+        viewport.addEventListener('dblclick', () => {
+            scale = 1;
+            panX = 0;
+            panY = 0;
+            updateTransform();
+        });
+
+        viewport.style.cursor = 'grab';
+
+        let treeData = null;
+        let currentNodeId = null;
+
+        const mermaidDiv = document.getElementById('mermaid-output');
+        const currentNodeEl = document.getElementById('current-node');
+        const pathEl = document.getElementById('path');
+        const itemsList = document.getElementById('items-list');
+
+        async function loadAndRender() {
+            try {
+                const res = await fetch("database/get_hierarchy.php");
+                if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+
+                const rawText = await res.text();
+                let parsedData;
+                try {
+                    parsedData = JSON.parse(rawText);
+                } catch (e) {
+                    console.error("JSON parse error:", e, rawText.substring(0, 300));
+                    mermaidDiv.innerHTML = '<p style="color:#ff6b6b">Invalid server response</p>';
+                    return;
+                }
+
+                treeData = parsedData;
+
+                // ─── CRITICAL: Attach .parent references ───────────────────────
+                function attachParents(nodes, parent = null) {
+                    for (const node of nodes) {
+                        node.parent = parent; // ← this line is usually missing!
+                        if (node.children && Array.isArray(node.children)) {
+                            attachParents(node.children, node);
+                        }
+                    }
+                }
+
+                if (Array.isArray(treeData)) {
+                    attachParents(treeData, null); // start with root nodes having parent = null
+                }
+
+                if (treeData?.length > 0) {
+                    renderMermaid(treeData);
+                    selectNode(treeData[0].id); // auto-select root
+                } else {
+                    mermaidDiv.innerHTML = '<p>No hierarchy data</p>';
+                }
+            } catch (err) {
+                console.error("Load failed:", err);
+                mermaidDiv.innerHTML = `<p style="color:#ff6b6b">Error: ${err.message}</p>`;
+            }
+        }
+
+        function extractAllIds(nodes, collected = new Set()) {
             for (const node of nodes) {
-                node.parent = parent;           // ← this line is usually missing!
+                if (node.id != null) collected.add(String(node.id));
                 if (node.children && Array.isArray(node.children)) {
-                    attachParents(node.children, node);
+                    extractAllIds(node.children, collected);
                 }
             }
+            return Array.from(collected).sort();
         }
 
-        if (Array.isArray(treeData)) {
-            attachParents(treeData, null);   // start with root nodes having parent = null
-        }
+        function buildMermaidGraph(nodes, parentId = null) {
+            let graph = "graph TD\n";
 
-        if (treeData?.length > 0) {
-            renderMermaid(treeData);
-            selectNode(treeData[0].id);      // auto-select root
-        } else {
-            mermaidDiv.innerHTML = '<p>No hierarchy data</p>';
-        }
-    } catch (err) {
-        console.error("Load failed:", err);
-        mermaidDiv.innerHTML = `<p style="color:#ff6b6b">Error: ${err.message}</p>`;
-    }
-}
+            function addNode(node, parent) {
+                const safeId = 'n' + String(node.id).replace(/[^a-zA-Z0-9]/g, '_');
+                const safeName = node.name.replace(/"/g, '\\"');
 
-function extractAllIds(nodes, collected = new Set()) {
-    for (const node of nodes) {
-        if (node.id != null) collected.add(String(node.id));
-        if (node.children && Array.isArray(node.children)) {
-            extractAllIds(node.children, collected);
-        }
-    }
-    return Array.from(collected).sort();
-}
+                graph += `    ${safeId}["${safeName}<br/>(${node.children?.length || 0} children • ${node.item_count || 0} items)"]\n`;
 
-function buildMermaidGraph(nodes, parentId = null) {
-    let graph = "graph TD\n";
-    
-    function addNode(node, parent) {
-        const safeId = 'n' + String(node.id).replace(/[^a-zA-Z0-9]/g, '_');
-        const safeName = node.name.replace(/"/g, '\\"');
-        
-        graph += `    ${safeId}["${safeName}<br/>(${node.children?.length || 0} children • ${node.item_count || 0} items)"]\n`;
-        
-        if (parent) {
-            graph += `    ${parent} --> ${safeId}\n`;
-        }
+                if (parent) {
+                    graph += `    ${parent} --> ${safeId}\n`;
+                }
 
-        if (node.children?.length) {
-            node.children.forEach(child => addNode(child, safeId));
-        }
-    }
-
-    nodes.forEach(node => addNode(node, parentId));
-    return graph;
-}
-
-function renderMermaid(nodes) {
-    const graphDefinition = buildMermaidGraph(nodes);
-    console.log("Mermaid graph definition:", graphDefinition);
-
-    mermaid.render('graphDiv', graphDefinition).then(({ svg }) => {
-        mermaidDiv.innerHTML = svg;
-        mermaidDiv.querySelectorAll('a').forEach(a => a.removeAttribute('href'));
-
-        // Make nodes clickable + highlight
-        document.querySelectorAll('.node').forEach(nodeEl => {
-            let rawId = nodeEl.id.replace('flowchart-', '');
-            let cleaned = rawId.replace(/^n/, '');
-            const id = cleaned.split(/[^0-9]/)[0];
-
-            nodeEl.style.cursor = 'pointer';
-
-            nodeEl.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
-                nodeEl.classList.add('selected');
-
-                centerOnNode(nodeEl);
-                selectNode(id);
-            });
-        });
-
-        // Center on root node after render
-        requestAnimationFrame(() => {
-            const svgEl = mermaidDiv.querySelector('svg');
-            if (!svgEl) return;
-
-            const rootNodeEl = mermaidDiv.querySelector('.node') || 
-                               mermaidDiv.querySelector('[id^="flowchart-"]');
-
-            if (rootNodeEl) {
-                const rootRect = rootNodeEl.getBoundingClientRect();
-                const viewportRect = viewport.getBoundingClientRect();
-
-                const targetX = viewportRect.width / 2 - (rootRect.left - viewportRect.left) - (rootRect.width / 2);
-                const targetY = 100 - (rootRect.top - viewportRect.top);
-
-                panX = targetX;
-                panY = targetY;
-                scale = 1;
-                updateTransform();
+                if (node.children?.length) {
+                    node.children.forEach(child => addNode(child, safeId));
+                }
             }
-        });
-    }).catch(err => {
-        console.error("Mermaid render error:", err);
-        mermaidDiv.innerHTML = "<p style='color:#ff6b6b'>Diagram render failed</p>";
-    });
-}
 
-function centerOnNode(nodeEl, duration = 700) {
-    if (!nodeEl) return;
+            nodes.forEach(node => addNode(node, parentId));
+            return graph;
+        }
 
-    const nodeRect  = nodeEl.getBoundingClientRect();
-    const viewportRect = viewport.getBoundingClientRect();
+        function renderMermaid(nodes) {
+            const graphDefinition = buildMermaidGraph(nodes);
+            console.log("Mermaid graph definition:", graphDefinition);
 
-    const nodeCenterX = nodeRect.left + nodeRect.width / 2;
-    const viewportCenterX = viewportRect.left + viewportRect.width / 2;
+            mermaid.render('graphDiv', graphDefinition).then(({
+                svg
+            }) => {
+                mermaidDiv.innerHTML = svg;
+                mermaidDiv.querySelectorAll('a').forEach(a => a.removeAttribute('href'));
 
-    const nodeCenterY = nodeRect.top + nodeRect.height / 2;
-    const viewportCenterY = viewportRect.top + viewportRect.height / 2;
+                // Make nodes clickable + highlight
+                document.querySelectorAll('.node').forEach(nodeEl => {
+                    let rawId = nodeEl.id.replace('flowchart-', '');
+                    let cleaned = rawId.replace(/^n/, '');
+                    const id = cleaned.split(/[^0-9]/)[0];
 
-    const targetPanX = panX + (viewportCenterX - nodeCenterX);
-    const targetPanY = panY + (viewportCenterY - nodeCenterY);
+                    nodeEl.style.cursor = 'pointer';
 
-    const startX = panX;
-    const startY = panY;
-    let startTime = null;
+                    nodeEl.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
 
-    function easeOutQuad(t) {
-        return t * (2 - t);
-    }
+                        document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+                        nodeEl.classList.add('selected');
 
-    function animate(time) {
-        if (!startTime) startTime = time;
-        const elapsed = time - startTime;
-        let progress = elapsed / duration;
-        progress = Math.min(1, Math.max(0, progress));
-        const eased = easeOutQuad(progress);
+                        centerOnNode(nodeEl);
+                        selectNode(id);
+                    });
+                });
 
-        panX = startX + (targetPanX - startX) * eased;
-        panY = startY + (targetPanY - startY) * eased;
+                // Center on root node after render
+                requestAnimationFrame(() => {
+                    const svgEl = mermaidDiv.querySelector('svg');
+                    if (!svgEl) return;
 
-        updateTransform();
+                    const rootNodeEl = mermaidDiv.querySelector('.node') ||
+                        mermaidDiv.querySelector('[id^="flowchart-"]');
 
-        if (progress < 1) {
+                    if (rootNodeEl) {
+                        const rootRect = rootNodeEl.getBoundingClientRect();
+                        const viewportRect = viewport.getBoundingClientRect();
+
+                        const targetX = viewportRect.width / 2 - (rootRect.left - viewportRect.left) - (rootRect.width / 2);
+                        const targetY = 100 - (rootRect.top - viewportRect.top);
+
+                        panX = targetX;
+                        panY = targetY;
+                        scale = 1;
+                        updateTransform();
+                    }
+                });
+            }).catch(err => {
+                console.error("Mermaid render error:", err);
+                mermaidDiv.innerHTML = "<p style='color:#ff6b6b'>Diagram render failed</p>";
+            });
+        }
+
+        function centerOnNode(nodeEl, duration = 700) {
+            if (!nodeEl) return;
+
+            const nodeRect = nodeEl.getBoundingClientRect();
+            const viewportRect = viewport.getBoundingClientRect();
+
+            const nodeCenterX = nodeRect.left + nodeRect.width / 2;
+            const viewportCenterX = viewportRect.left + viewportRect.width / 2;
+
+            const nodeCenterY = nodeRect.top + nodeRect.height / 2;
+            const viewportCenterY = viewportRect.top + viewportRect.height / 2;
+
+            const targetPanX = panX + (viewportCenterX - nodeCenterX);
+            const targetPanY = panY + (viewportCenterY - nodeCenterY);
+
+            const startX = panX;
+            const startY = panY;
+            let startTime = null;
+
+            function easeOutQuad(t) {
+                return t * (2 - t);
+            }
+
+            function animate(time) {
+                if (!startTime) startTime = time;
+                const elapsed = time - startTime;
+                let progress = elapsed / duration;
+                progress = Math.min(1, Math.max(0, progress));
+                const eased = easeOutQuad(progress);
+
+                panX = startX + (targetPanX - startX) * eased;
+                panY = startY + (targetPanY - startY) * eased;
+
+                updateTransform();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            }
+
             requestAnimationFrame(animate);
         }
-    }
 
-    requestAnimationFrame(animate);
-}
+        function buildPath(node) {
+            if (!node) return "—";
 
-function buildPath(node) {
-    if (!node) return "—";
-
-    const parts = [];
-    let current = node;
-    while (current) {
-        parts.unshift(current.name);
-        current = current.parent;
-    }
-    return parts.join(" › ");
-}
-
-function findNode(nodes, id) {
-    for (const node of nodes) {
-        if (String(node.id) === String(id)) {
-            return node;
-        }
-        if (node.children?.length) {
-            const found = findNode(node.children, id);
-            if (found) return found;
-        }
-    }
-    return null;
-}
-
-async function selectNode(nodeId) {
-    console.log("selectNode START — nodeId:", nodeId);
-
-    if (!treeData) {
-        itemsList.innerHTML = "<span style='color:#ff6b6b'>Hierarchy data not loaded</span>";
-        return;
-    }
-
-    let node = null;
-    function search(nodes) {
-        for (const n of nodes) {
-            if (String(n.id) === String(nodeId)) {
-                node = n;
-                return true;
+            const parts = [];
+            let current = node;
+            while (current) {
+                parts.unshift(current.name);
+                current = current.parent;
             }
-            if (n.children?.length) {
-                if (search(n.children)) return true;
+            return parts.join(" › ");
+        }
+
+        function findNode(nodes, id) {
+            for (const node of nodes) {
+                if (String(node.id) === String(id)) {
+                    return node;
+                }
+                if (node.children?.length) {
+                    const found = findNode(node.children, id);
+                    if (found) return found;
+                }
             }
-        }
-        return false;
-    }
-    search(treeData);
-
-    if (!node) {
-        currentNodeEl.textContent = "Unknown location";
-        pathEl.textContent = "";
-        itemsList.innerHTML = "<span style='color:#ff6b6b'>Location not found</span>";
-        return;
-    }
-
-    currentNodeId = nodeId;
-    currentNodeEl.textContent = node.name;
-    pathEl.textContent = buildPath(node);
-
-
-    itemsList.innerHTML = "Loading...";
-
-    try {
-        const res = await fetch(`database/get_items_by_node.php?id=${nodeId}`);
-        if (!res.ok) throw new Error(`Server returned ${res.status}`);
-
-        const items = await res.json();
-
-        if (!items?.length) {
-            itemsList.innerHTML = "No items in this location.";
-            return;
+            return null;
         }
 
-        let html = "";
-        items.forEach(item => {
-            html += `
+        async function selectNode(nodeId) {
+            console.log("selectNode START — nodeId:", nodeId);
+
+            if (!treeData) {
+                itemsList.innerHTML = "<span style='color:#ff6b6b'>Hierarchy data not loaded</span>";
+                return;
+            }
+
+            let node = null;
+
+            function search(nodes) {
+                for (const n of nodes) {
+                    if (String(n.id) === String(nodeId)) {
+                        node = n;
+                        return true;
+                    }
+                    if (n.children?.length) {
+                        if (search(n.children)) return true;
+                    }
+                }
+                return false;
+            }
+            search(treeData);
+
+            if (!node) {
+                currentNodeEl.textContent = "Unknown location";
+                pathEl.textContent = "";
+                itemsList.innerHTML = "<span style='color:#ff6b6b'>Location not found</span>";
+                return;
+            }
+
+            currentNodeId = nodeId;
+            currentNodeEl.textContent = node.name;
+            pathEl.textContent = buildPath(node);
+
+
+            itemsList.innerHTML = "Loading...";
+
+            try {
+                const res = await fetch(`database/get_items_by_node.php?id=${nodeId}`);
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+                const items = await res.json();
+
+                if (!items?.length) {
+                    itemsList.innerHTML = "No items in this location.";
+                    return;
+                }
+
+                let html = "";
+                items.forEach(item => {
+                    html += `
                 <div class="item-card" data-item-id="${item.id}">
                     <strong>${item.name}</strong>
                     <small>Type: ${item.type} • Expiry: ${item.expiry_date || '-'}</small>
@@ -606,37 +624,38 @@ async function selectNode(nodeId) {
                     ">Go to item →</button>
                 </div>
             `;
-        });
-        itemsList.innerHTML = html;
+                });
+                itemsList.innerHTML = html;
 
-        // Item card interactions
-        document.querySelectorAll('.item-card').forEach(card => {
+                // Item card interactions
+                document.querySelectorAll('.item-card').forEach(card => {
 
-            const btn = card.querySelector('.go-to-item-btn');
-            if (btn) {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const itemId = card.dataset.itemId;
-                    if (itemId) {
-                        window.location.href = `inventory.php?highlight=item-${itemId}`;
+                    const btn = card.querySelector('.go-to-item-btn');
+                    if (btn) {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const itemId = card.dataset.itemId;
+                            if (itemId) {
+                                window.location.href = `inventory.php?highlight=item-${itemId}`;
+                            }
+                        });
                     }
                 });
+            } catch (err) {
+                console.error("Items fetch failed:", err);
+                itemsList.innerHTML = `<span style='color:#ff6b6b'>Error loading items: ${err.message}</span>`;
             }
+        }
+
+        // Back button handler (outside renderMermaid)
+
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAndRender();
         });
-    } catch (err) {
-        console.error("Items fetch failed:", err);
-        itemsList.innerHTML = `<span style='color:#ff6b6b'>Error loading items: ${err.message}</span>`;
-    }
-}
-
-// Back button handler (outside renderMermaid)
-
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    loadAndRender();
-});
-</script>
+    </script>
 
 </body>
+
 </html>

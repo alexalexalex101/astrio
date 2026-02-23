@@ -4,21 +4,22 @@
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     height: 100%;
     background-color: #000000;
-    overflow:hidden;
+    overflow: hidden;
     background-image: url(images/space.avif);
 }
 
 @font-face {
-  font-family: "League Spartan";
-  src: url('fonts/LeagueSpartan-VariableFont_wght.ttf');
+    font-family: "League Spartan";
+    src: url('fonts/LeagueSpartan-VariableFont_wght.ttf');
 }
 
 @font-face {
-  font-family: "nasalization";
-  src: url('fonts/nasalization-rg.ttf');
+    font-family: "nasalization";
+    src: url('fonts/nasalization-rg.ttf');
 }
 
 .uppercase {
@@ -33,18 +34,18 @@ html, body {
     height: 6.95rem;
     background-color: #1c2143;
     font-size: 2rem;
-    padding-top:1rem;
-    padding-bottom:1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 .topnav a {
     text-decoration: none;
-    color:white;
-    
+    color: white;
+
 }
 
 .navlogo {
-    height:100%;
+    height: 100%;
 }
 
 .nasalogo {
@@ -53,13 +54,13 @@ html, body {
     top: 1.5rem;
     left: 1.5rem;
     z-index: 100;
-    filter: drop-shadow(0 0 12px rgba(255,255,255,0.18));
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.18));
 }
 
 #backbutton {
     position: fixed;
     bottom: 1rem;
-    left:1rem;
+    left: 1rem;
     background-color: #4b53b9;
     text-decoration: none;
     color: white;
@@ -70,13 +71,13 @@ html, body {
     border-radius: 2rem;
     font-family: "League Spartan", sans-serif;
     font-weight: 600;
-    box-shadow: 0 0 40px rgba(75,83,185,0.6);
+    box-shadow: 0 0 40px rgba(75, 83, 185, 0.6);
 }
 
 #logoutBtn {
     position: fixed;
     top: 1rem;
-    right:1rem;
+    right: 1rem;
     background-color: #4b53b9;
     text-decoration: none;
     color: white;
@@ -85,7 +86,7 @@ html, body {
     font-weight: 600;
     padding: 1rem;
     border-radius: 2rem;
-    box-shadow: 0 0 40px rgba(75,83,185,0.6);
+    box-shadow: 0 0 40px rgba(75, 83, 185, 0.6);
 }
 
 .circle {
@@ -112,10 +113,11 @@ html, body {
     flex-direction: column;
     width: 100%;
 }
+
 .loginbuttons {
-    width:28.2625rem;
-    height:6rem;
-    margin-top:1rem;
+    width: 28.2625rem;
+    height: 6rem;
+    margin-top: 1rem;
     margin-bottom: 1em;
     border-radius: 5rem;
     background-color: #0e3b8f;
@@ -123,8 +125,8 @@ html, body {
     font-family: "nasalization", sans-serif;
     font-weight: 300;
     font-size: 2rem;
-    -webkit-box-shadow: inset -1px 3px 8px 5px #1F87FF, 2px 5px 16px 0px #0B325E, 5px 5px 15px 5px rgba(198,115,255,0); 
-    box-shadow: inset -1px 3px 8px 5px #1F87FF, 2px 5px 16px 0px #0B325E, 5px 5px 15px 5px rgba(198,115,255,0);
+    -webkit-box-shadow: inset -1px 3px 8px 5px #1F87FF, 2px 5px 16px 0px #0B325E, 5px 5px 15px 5px rgba(198, 115, 255, 0);
+    box-shadow: inset -1px 3px 8px 5px #1F87FF, 2px 5px 16px 0px #0B325E, 5px 5px 15px 5px rgba(198, 115, 255, 0);
     transition: all 0.3s ease;
 }
 
@@ -142,9 +144,9 @@ html, body {
 }
 
 .navcontainer button {
-    width:18.69375rem;
-    height:6.75rem;
-    margin-top:1.25rem;
+    width: 18.69375rem;
+    height: 6.75rem;
+    margin-top: 1.25rem;
     margin-bottom: 1.25em;
     border-radius: .5rem;
     background-color: #0e3b8f;
@@ -152,8 +154,8 @@ html, body {
     font-size: 1.5rem;
     font-family: "League Spartan", sans-serif;
     font-weight: 600;
-    -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 15px 5px rgba(198,115,255,0); 
-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 15px 5px rgba(198,115,255,0);
+    -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 15px 5px rgba(198, 115, 255, 0);
+    box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 15px 5px rgba(198, 115, 255, 0);
 }
 
 .navcontainer button:hover {
@@ -165,7 +167,7 @@ box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 15p
 }
 
 #space2 {
-    margin-left: 250px;    
+    margin-left: 250px;
 }
 
 #space3 {
@@ -180,7 +182,7 @@ box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 15p
     text-align: center;
     margin-bottom: 3rem;
     width: 50%;
-    text-shadow: 0 1px 0 #CCCCCC, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15), 3px 2px 11px rgba(51,78,206,0);
+    text-shadow: 0 1px 0 #CCCCCC, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0, 0, 0, .1), 0 0 5px rgba(0, 0, 0, .1), 0 1px 3px rgba(0, 0, 0, .3), 0 3px 5px rgba(0, 0, 0, .2), 0 5px 10px rgba(0, 0, 0, .25), 0 10px 10px rgba(0, 0, 0, .2), 0 20px 20px rgba(0, 0, 0, .15), 3px 2px 11px rgba(51, 78, 206, 0);
 }
 
 .FormTitle {
@@ -224,7 +226,7 @@ div#errorMessage {
     border-radius: 10px;
     text-align: left;
     min-height: 450px;
-    box-shadow: 0 0 40px rgba(75,83,185,0.9);
+    box-shadow: 0 0 40px rgba(75, 83, 185, 0.9);
 }
 
 .LoginForm div,
@@ -307,7 +309,7 @@ form::after {
     color: #fff;
 }
 
-#incomingItemsList li:hover{
+#incomingItemsList li:hover {
     background: rgba(107, 112, 172, 0.35);
     color: #fff;
 }

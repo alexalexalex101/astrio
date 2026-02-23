@@ -66,7 +66,6 @@ try {
         http_response_code(404);
         echo json_encode(['error' => 'Item not found']);
     }
-
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode([
@@ -78,4 +77,3 @@ try {
 
 // Send output
 ob_end_flush();
-?>

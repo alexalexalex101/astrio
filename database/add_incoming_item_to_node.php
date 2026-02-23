@@ -64,7 +64,6 @@ try {
 
     $conn->commit();
     echo "OK";
-
 } catch (Exception $e) {
     $conn->rollback();
     echo "Error: " . $e->getMessage();

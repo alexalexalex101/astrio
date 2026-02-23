@@ -20,6 +20,7 @@ $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html>
+
 <head>
   <link rel="stylesheet" href="default.css">
   <style>
@@ -29,9 +30,9 @@ $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
       max-height: 400px;
       overflow-y: auto;
       margin: 2rem auto;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
-      box-shadow: 0 0 25px rgba(75, 83, 185, 0.7), inset 0 0 10px rgba(255,255,255,0.1);
+      box-shadow: 0 0 25px rgba(75, 83, 185, 0.7), inset 0 0 10px rgba(255, 255, 255, 0.1);
       background: rgba(12, 18, 44, 0.9);
     }
 
@@ -42,12 +43,15 @@ $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
       font-family: "League Spartan", sans-serif;
     }
 
-    th, td {
+    th,
+    td {
       padding: 12px;
-      height: 50px;           /* uniform row height */
+      height: 50px;
+      /* uniform row height */
       text-align: center;
-      vertical-align: middle;  /* center text vertically */
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      vertical-align: middle;
+      /* center text vertically */
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       box-sizing: border-box;
     }
 
@@ -60,7 +64,7 @@ $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     tbody tr:nth-child(even) {
-      background-color: rgba(255,255,255,0.05);
+      background-color: rgba(255, 255, 255, 0.05);
     }
 
     tbody tr:hover {
@@ -72,26 +76,30 @@ $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
     tr.dragging {
       opacity: 0.7;
       background: rgba(198, 115, 255, 0.3);
-      box-shadow: 0 0 15px rgba(198,115,255,0.7);
+      box-shadow: 0 0 15px rgba(198, 115, 255, 0.7);
     }
 
     /* Scrollbar styling */
     #supplierContainer::-webkit-scrollbar {
       width: 8px;
     }
+
     #supplierContainer::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 10px;
     }
+
     #supplierContainer::-webkit-scrollbar-thumb {
-      background: rgba(75,83,185,0.6);
+      background: rgba(75, 83, 185, 0.6);
       border-radius: 10px;
     }
+
     #supplierContainer::-webkit-scrollbar-thumb:hover {
-      background: rgba(75,83,185,0.8);
+      background: rgba(75, 83, 185, 0.8);
     }
   </style>
 </head>
+
 <body>
   <a href="dashboard.php"><img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo"></a>
   <a href="database/logout.php" id="logoutBtn">Log out</a>
@@ -116,14 +124,14 @@ $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </thead>
           <tbody>
             <?php foreach ($suppliers as $row): ?>
-            <tr draggable="true">
-              <td><?php echo htmlspecialchars($row['name']); ?></td>
-              <td><?php echo htmlspecialchars($row['contract_name']); ?></td>
-              <td><?php echo htmlspecialchars($row['item_supplied']); ?></td>
-              <td><?php echo htmlspecialchars($row['risk_level']); ?></td>
-              <td><?php echo htmlspecialchars($row['contact_email']); ?></td>
-              <td><?php echo htmlspecialchars($row['tracking_method']); ?></td>
-            </tr>
+              <tr draggable="true">
+                <td><?php echo htmlspecialchars($row['name']); ?></td>
+                <td><?php echo htmlspecialchars($row['contract_name']); ?></td>
+                <td><?php echo htmlspecialchars($row['item_supplied']); ?></td>
+                <td><?php echo htmlspecialchars($row['risk_level']); ?></td>
+                <td><?php echo htmlspecialchars($row['contact_email']); ?></td>
+                <td><?php echo htmlspecialchars($row['tracking_method']); ?></td>
+              </tr>
             <?php endforeach; ?>
           </tbody>
         </table>
@@ -164,12 +172,18 @@ $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
         if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
+          return {
+            offset: offset,
+            element: child
+          };
         } else {
           return closest;
         }
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
+      }, {
+        offset: Number.NEGATIVE_INFINITY
+      }).element;
     }
   </script>
 </body>
+
 </html>

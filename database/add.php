@@ -83,7 +83,6 @@ try {
     // send user to login page after successful signup
     header('Location: ../nasalogin.php');
     exit;
-
 } catch (PDOException $e) {
     // if something goes wrong with the database, show the message
     $response = [
@@ -95,4 +94,3 @@ try {
 $_SESSION['response'] = $response;
 header('Location: ../useradd.php');
 exit;
-?>

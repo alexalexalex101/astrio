@@ -51,4 +51,3 @@ echo json_encode($items);
 
 $stmt->close();
 $conn->close();
-?>

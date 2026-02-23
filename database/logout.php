@@ -1,12 +1,9 @@
 <?php
-    session_start();
-    
-    session_unset();
+session_start();
 
-    session_destroy();
+session_unset();
 
-    header('Location: ../index.html');
-    exit;
-    
+session_destroy();
 
-?>
+header('Location: ../index.html');
+exit;

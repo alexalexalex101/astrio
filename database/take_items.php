@@ -40,5 +40,3 @@ echo $ok ? 'OK' : ('ERR: ' . $stmt->error);
 
 $stmt->close();
 $conn->close();
-
-?>
