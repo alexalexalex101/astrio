@@ -134,7 +134,22 @@ foreach ($flat as $id => &$node) {
     }
 
     // Default
-    $node['remaining'] = 100;
+    // ------------------------------------------------------------
+// NEW RULE: Only show bars for CTBs or nodes with real items
+// ------------------------------------------------------------
+$isCTB = strpos($node['ctb_type'], 'CTB') === 0;
+$hasItems = ($node['item_count'] > 0);
+
+if ($isCTB || $hasItems) {
+    // They already have correct remaining from earlier logic
+    // or they will fall into microcontainer logic above
+    continue;
+}
+
+// Everyone else: no bar
+$node['remaining'] = null;   // or 100 if you prefer, but null hides the bar
+$node['used_volume'] = 0;
+
 }
 
 echo json_encode($tree);
