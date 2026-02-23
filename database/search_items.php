@@ -3,14 +3,7 @@ require "db.php";
 header('Content-Type: application/json');
 
 // --- Auto-move expired food to Waste Bay ---
-$conn->query("
-    UPDATE items
-    SET type = 'waste',
-        hierarchy_id = (SELECT id FROM hierarchy WHERE name = 'Waste Bay' LIMIT 1)
-    WHERE type = 'food'
-      AND expiry_date IS NOT NULL
-      AND expiry_date < CURDATE()
-");
+
 
 // --- Read and sanitize query ---
 $q = isset($_GET['q']) ? trim($_GET['q']) : "";
