@@ -598,6 +598,15 @@ body {
     display: none;
 }
 
+ .searchTable {
+    margin-bottom: 2rem;
+ }
+
+.searchTable .searchCaption {
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
 </style>
 
 </head>
@@ -685,6 +694,7 @@ body {
         <div id="nodeItemsWrapper">
             <button id="takeSelectedBtn" class="control-btn" style="display:none; margin-bottom:10px;">Take Selected</button>
             <div id="noItems" class="no-items"></div>
+            <div id="searchView" class="searchTable" style="display:none;"></div>
             <table id="itemsTable" class="items-table" style="display:none;">
                 <thead>
                     <tr>
@@ -702,7 +712,6 @@ body {
             </table>
         </div>
 
-        <div id="searchView" style="display:none;"></div>
 
     </main>
 
@@ -1271,6 +1280,7 @@ function setupSearch() {
 
                 // Build table
                 let html = `
+                    <p class="searchCaption">Search Results</p>
                     <table class="items-table">
                         <thead>
                             <tr>
