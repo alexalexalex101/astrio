@@ -127,6 +127,24 @@ body {
     content: "←";
     font-size: 18px;
 }
+.expiry-expired {
+    color: #ff4d4d;       /* bright red */
+    font-weight: 700;
+}
+
+.expiry-critical {
+    color: #ff6b6b;       /* red-orange */
+    font-weight: 600;
+}
+
+.expiry-warning {
+    color: #ffcc66;       /* yellowish */
+    font-weight: 600;
+}
+.expiry-fresh {
+    color: #66ff99;       /* fresh green */
+    font-weight: 600;
+}
 
 /* ============================
    NEW MISSION CONTROL SIDEBAR
@@ -1079,16 +1097,45 @@ function renderItems(items) {
         const tr = document.createElement("tr");
         tr.dataset.itemId = item.id;
 
-       tr.innerHTML = `
+    // Compute expiry color
+// Compute expiry color
+let expiryDisplay = "-";
+let expiryClass = "";
+
+if (item.expiry_date) {
+    const today = new Date();
+
+    // Parse YYYY-MM-DD safely (no timezone shift)
+    const [year, month, day] = item.expiry_date.split("-");
+    const exp = new Date(year, month - 1, day);
+
+    const diffDays = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+
+    expiryDisplay = item.expiry_date;
+
+    if (diffDays < 0) {
+        expiryClass = "expiry-expired";
+    } else if (diffDays <= 3) {
+        expiryClass = "expiry-critical";
+    } else if (diffDays <= 7) {
+        expiryClass = "expiry-warning";
+    }else{
+        expiryClass = "expiry-fresh";
+    }
+}
+
+
+    tr.innerHTML = `
         <td><input type="checkbox" class="item-select" data-id="${item.id}"></td>
         <td>${item.name}</td>
         <td>${item.type}</td>
-        <td>${item.expiry_date || "-"}</td>
+        <td class="${expiryClass}">${expiryDisplay}</td>
         <td>${item.calories || ""}</td>
         <td>${shortenLocation(item.location || "")}</td>
         <td>${item.rfid || ""}</td>
         <td>${(item.remaining_percent ?? 100)}%</td>
     `;
+
 
 
         body.appendChild(tr);
