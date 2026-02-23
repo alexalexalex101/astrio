@@ -1153,6 +1153,7 @@ function setupSearch() {
     input.addEventListener("input", e => {
         const q = e.target.value.trim();
 
+        // Hide search view if too short
         if (q.length < 2) {
             searchView.style.display = "none";
             searchView.innerHTML = "";
@@ -1162,12 +1163,15 @@ function setupSearch() {
         fetch("database/search_items.php?q=" + encodeURIComponent(q))
             .then(r => r.json())
             .then(items => {
+
+                // No results → hide
                 if (!items || !items.length) {
                     searchView.style.display = "none";
                     searchView.innerHTML = "";
                     return;
                 }
 
+                // Build table
                 let html = `
                     <table class="items-table">
                         <thead>
@@ -1186,21 +1190,38 @@ function setupSearch() {
 
                 items.forEach(item => {
                     html += `
-                        <tr>
+                        <tr data-item-id="${item.id}">
                             <td>${item.name}</td>
                             <td>${item.type}</td>
-                            <td>${item.expiry || ""}</td>
+                            <td>${item.expiry_date || "-"}</td>
                             <td>${item.calories || ""}</td>
                             <td>${shortenLocation(item.location || "")}</td>
                             <td>${item.rfid || ""}</td>
-                            <td>${(item.remaining ?? 100)}%</td>
+                            <td>${(item.remaining_percent ?? 100)}%</td>
                         </tr>
                     `;
                 });
 
                 html += `</tbody></table>`;
+
                 searchView.innerHTML = html;
                 searchView.style.display = "block";
+
+                // ⭐ MAKE SEARCH ROWS CLICKABLE
+                const rows = searchView.querySelectorAll("tbody tr");
+                rows.forEach(row => {
+                    row.style.cursor = "pointer";
+
+                    row.addEventListener("click", (e) => {
+                        // Ignore checkbox or button clicks
+                        if (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON") return;
+
+                        const itemId = row.dataset.itemId;
+                        if (itemId) {
+                            window.location.href = `inventory.php?highlight=item-${itemId}`;
+                        }
+                    });
+                });
             });
     });
 }
