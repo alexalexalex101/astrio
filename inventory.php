@@ -517,6 +517,19 @@ body {
     align-items: center;
     font-size: 13px;
 }
+.incoming-close-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 10px;
+    transition: color 0.2s ease;
+}
+
+.incoming-close-btn:hover {
+    color: #ff6b6b;
+}
 
 .incoming-body {
     padding: 10px 12px;
@@ -671,7 +684,9 @@ body {
 
         <div class="incoming-header">
             <div class="incoming-drag-handle">INCOMING ITEMS</div>
+            <button id="incomingCloseBtn" class="incoming-close-btn">&times;</button>
         </div>
+
 
         <div class="incoming-body">
             <table class="items-table">
@@ -1287,6 +1302,7 @@ function setupIncoming() {
     const moveBtn = document.getElementById("incomingMoveBtn");
     const cancelBtn = document.getElementById("incomingCancelBtn");
 
+    // OPEN MODAL
     if (openBtn) {
         openBtn.onclick = () => {
             modal.style.display = "block";
@@ -1294,22 +1310,28 @@ function setupIncoming() {
         };
     }
 
+    // CLOSE MODAL (X BUTTON)
     if (closeBtn) {
         closeBtn.onclick = () => {
             modal.style.display = "none";
         };
     }
 
+    // REFRESH
     if (refreshBtn) {
         refreshBtn.onclick = () => loadIncoming();
     }
 
+    // MOVE SELECTED
     if (moveBtn) {
         moveBtn.onclick = () => moveSelectedIncoming();
     }
 
+    // CANCEL BUTTON (if present)
     if (cancelBtn) {
-        cancelBtn.onclick = () => { modal.style.display = "none"; };
+        cancelBtn.onclick = () => {
+            modal.style.display = "none";
+        };
     }
 }
 
