@@ -314,4 +314,41 @@ form::after {
     color: #fff;
 }
 
-/* Make all table cells the same height */
+.main-planet {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 52vw;
+            height: 52vw;
+            aspect-ratio: 1 / 1;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 32%, #d6ecff 0%, #7faeff 28%, #355fc2 62%, #0c2560 100%);
+            box-shadow:
+                0 0 70px rgba(160, 210, 255, 0.45),
+                inset 0 0 70px rgba(255, 255, 255, 0.15),
+                0 0 140px rgba(80, 130, 255, 0.35);
+            z-index: 2;
+            border: 3px solid rgba(160, 190, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem;
+        }
+
+    /* Inner content */
+    .planet-content {
+      width: 90%;
+      text-align: center;
+      font-family: "League Spartan", sans-serif;
+      color: #ffffff;
+    }
+
+    /* Title */
+    .page-title {
+      font-family: "nasalization", "League Spartan", sans-serif;
+      font-size: clamp(28px, 2.8vw, 48px);
+      margin-bottom: 2rem;
+      color: #f4f9ff;
+      text-shadow: 0 0 14px rgba(200, 220, 255, 0.4);
+    }

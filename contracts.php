@@ -1,58 +1,58 @@
 <?php
-session_start();
-include("database/connection.php");
+  session_start();
+  include("database/connection.php");
 
-/* ------------------------------
-   CONTRACT VALUE FORMATTER
------------------------------- */
-function formatContractValue($value)
-{
-  if ($value >= 1000000000) {
-    return '$' . round($value / 1000000000, 2) . 'B';
-  } elseif ($value >= 1000000) {
-    return '$' . round($value / 1000000, 2) . 'M';
-  } elseif ($value >= 1000) {
-    return '$' . round($value / 1000, 2) . 'K';
+  /* ------------------------------
+    CONTRACT VALUE FORMATTER
+  ------------------------------ */
+  function formatContractValue($value)
+  {
+    if ($value >= 1000000000) {
+      return '$' . round($value / 1000000000, 2) . 'B';
+    } elseif ($value >= 1000000) {
+      return '$' . round($value / 1000000, 2) . 'M';
+    } elseif ($value >= 1000) {
+      return '$' . round($value / 1000, 2) . 'K';
+    }
+    return '$' . $value;
   }
-  return '$' . $value;
-}
 
-/* ------------------------------
-   HANDLE ADD CONTRACT
------------------------------- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
-  $stmt = $conn->prepare("INSERT INTO contracts (supplier_id, contract_name, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)");
-  $stmt->execute([
-    $_POST['supplier_id'],
-    $_POST['contract_name'],
-    $_POST['start_date'],
-    $_POST['end_date'],
-    $_POST['status']
-  ]);
-}
+  /* ------------------------------
+    HANDLE ADD CONTRACT
+  ------------------------------ */
+  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
+    $stmt = $conn->prepare("INSERT INTO contracts (supplier_id, contract_name, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)");
+    $stmt->execute([
+      $_POST['supplier_id'],
+      $_POST['contract_name'],
+      $_POST['start_date'],
+      $_POST['end_date'],
+      $_POST['status']
+    ]);
+  }
 
-/* ------------------------------
-   HANDLE DELETE
------------------------------- */
-if (isset($_GET['delete'])) {
-  $stmt = $conn->prepare("DELETE FROM contracts WHERE contract_id = ?");
-  $stmt->execute([$_GET['delete']]);
-}
+  /* ------------------------------
+    HANDLE DELETE
+  ------------------------------ */
+  if (isset($_GET['delete'])) {
+    $stmt = $conn->prepare("DELETE FROM contracts WHERE contract_id = ?");
+    $stmt->execute([$_GET['delete']]);
+  }
 
-/* ------------------------------
-   FETCH DATA
------------------------------- */
-$suppliersStmt = $conn->query("SELECT supplier_id, name FROM suppliers");
-$suppliers = $suppliersStmt->fetchAll(PDO::FETCH_ASSOC);
+  /* ------------------------------
+    FETCH DATA
+  ------------------------------ */
+  $suppliersStmt = $conn->query("SELECT supplier_id, name FROM suppliers");
+  $suppliers = $suppliersStmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $conn->query("
-  SELECT c.contract_id, c.contract_name, c.start_date, c.end_date, c.status,
-         c.contract_value, s.name AS supplier_name
-  FROM contracts c
-  JOIN suppliers s ON c.supplier_id = s.supplier_id
-  ORDER BY c.start_date ASC
-");
-$contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  $stmt = $conn->query("
+    SELECT c.contract_id, c.contract_name, c.start_date, c.end_date, c.status,
+          c.contract_value, s.name AS supplier_name
+    FROM contracts c
+    JOIN suppliers s ON c.supplier_id = s.supplier_id
+    ORDER BY c.start_date ASC
+  ");
+  $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -70,53 +70,6 @@ $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     /* ------------------------------
    MAIN PLANET (LESS BRIGHT)
 ------------------------------ */
-    .main-planet {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: min(75vw, 1200px);
-      height: min(75vw, 1200px);
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-
-      background: radial-gradient(circle at 30% 30%,
-          #b8d8ff 0%,
-          #5f8ee0 28%,
-          #243f8f 65%,
-          #091c4a 100%);
-
-      box-shadow:
-        0 0 50px rgba(90, 140, 255, 0.35),
-        inset 0 0 60px rgba(255, 255, 255, 0.08),
-        0 0 120px rgba(60, 100, 255, 0.25);
-
-      border: 3px solid rgba(160, 190, 255, 0.25);
-
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-
-      padding: 4rem;
-      box-sizing: border-box;
-    }
-
-    /* Inner content */
-    .planet-content {
-      width: 90%;
-      text-align: center;
-      font-family: "League Spartan", sans-serif;
-      color: #ffffff;
-    }
-
-    /* Title */
-    .page-title {
-      font-family: "nasalization", "League Spartan", sans-serif;
-      font-size: clamp(28px, 2.8vw, 48px);
-      margin-bottom: 2rem;
-      color: #f4f9ff;
-      text-shadow: 0 0 14px rgba(200, 220, 255, 0.4);
-    }
 
     /* ------------------------------
    TABLE CONTAINER
