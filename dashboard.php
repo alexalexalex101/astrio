@@ -67,6 +67,7 @@ $fullName = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
             top: 38%;
             left: 50%;
             width: min(52vw, 600px);
+            height: min(52vw, 600px);
             aspect-ratio: 1;
             transform: translate(-50%, -50%);
             border-radius: 50%;
@@ -202,6 +203,17 @@ $fullName = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
         #space3 {
             display: none !important;
         }
+/* Tablet landscape / horizontal (covers ~most iPads, Galaxy Tabs, etc. in horizontal mode) */
+@media (min-width: 769px) and (max-width: 1200px) and (orientation: landscape) {
+    .main-planet {
+        width: 45vw;
+        height: 45vw;
+        top: 35%;
+    }
+    .moons-arc {
+        transform: translateY(9%);
+    }
+}
     </style>
 </head>
 
@@ -231,5 +243,6 @@ $fullName = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
     </div>
 
 </body>
+
 
 </html>
