@@ -913,6 +913,11 @@ function hideCTBCards() {
     container.innerHTML = "";
 }
 function selectNode(node) {
+// Auto-clear search bar + hide search results
+document.getElementById("globalSearch").value = "";
+document.getElementById("searchView").style.display = "none";
+document.getElementById("searchView").innerHTML = "";
+
 currentNode = node;
 
     document.getElementById("nodeTitle").textContent = node.name;
