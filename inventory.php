@@ -146,6 +146,31 @@ body {
     color: #66ff99;       /* fresh green */
     font-weight: 600;
 }
+/* Row is always red if it needs waste */
+.row-waste {
+    background-color: rgba(255, 77, 77, 0.18) !important;
+    position: relative;
+}
+
+/* Popup container (never affects table layout) */
+.waste-popup {
+    position: fixed; /* <-- THIS is the key */
+    background: #ff4d4d;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    z-index: 999999;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -100%);
+    transition: opacity 0.15s ease-out;
+}
+
+
 .remaining-empty {
     color: #ff4d4d !important;   /* bright red */
     font-weight: 700;
@@ -159,6 +184,17 @@ body {
     color: #66ff99 !important;   /* green */
     font-weight: 600;
 }
+/* Row highlight when item should go to waste */
+.row-waste:hover {
+    background-color: rgba(255, 77, 77, 0.25) !important; /* soft red glow */
+    cursor: pointer;
+}
+
+/* Tooltip styling (browser default is fine, but this improves clarity) */
+.row-waste[title] {
+    position: relative;
+}
+
 /* ============================
    NEW MISSION CONTROL SIDEBAR
    ============================ */
@@ -1095,6 +1131,10 @@ function shortenLocation(path) {
     if (parts.length <= 2) return path;
     return "…/" + parts.slice(-2).join("/");
 }
+// Create one global popup element
+let wastePopup = document.createElement("div");
+wastePopup.className = "waste-popup";
+document.body.appendChild(wastePopup);
 
 function renderItems(items) {
     const table = document.getElementById("itemsTable");
@@ -1120,13 +1160,12 @@ function renderItems(items) {
         tr.dataset.itemId = item.id;
 
         /* ============================
-           EXPIRY WARNING (FIXED)
+           EXPIRY WARNING
         ============================ */
         let expiryDisplay = item.expiry_date || "-";
         let expiryClass = "";
 
         if (item.expiry_date) {
-            // Normalize formats like "2026/02/23", "2026-02-23 00:00:00", etc.
             const cleanDate = item.expiry_date.replace(/\//g, "-").split(" ")[0];
             const [year, month, day] = cleanDate.split("-");
 
@@ -1136,16 +1175,10 @@ function renderItems(items) {
                 const diffDays = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
 
                 if (!isNaN(diffDays)) {
-                    if (diffDays < 0) {
-                        expiryClass = "expiry-expired";
-                    } else if (diffDays <= 3) {
-                        expiryClass = "expiry-critical";
-                    } else if (diffDays <= 7) {
-                        expiryClass = "expiry-warning";
-                    }else{
-                        expiryClass = "expiry-fresh";
-                    }
-
+                    if (diffDays < 0) expiryClass = "expiry-expired";
+                    else if (diffDays <= 3) expiryClass = "expiry-critical";
+                    else if (diffDays <= 7) expiryClass = "expiry-warning";
+                    else expiryClass = "expiry-fresh";
                 }
             }
         }
@@ -1159,14 +1192,46 @@ function renderItems(items) {
         if (item.remaining_percent !== null && item.remaining_percent !== undefined) {
             const rem = Number(item.remaining_percent);
 
-            if (rem === 0) {
-                remainingClass = "remaining-empty";
-            } else if (rem <= 10) {
-                remainingClass = "remaining-low";
-            }else{
-                remainingClass = "remaining-okay";
-            }
+            if (rem === 0) remainingClass = "remaining-empty";
+            else if (rem <= 10) remainingClass = "remaining-low";
+            else remainingClass = "remaining-okay";
         }
+
+        /* ============================
+           WASTE INDICATOR
+        ============================ */
+        let wasteIcon = "";
+        let wasteTitle = "";
+
+        const needsWaste =
+            expiryClass === "expiry-expired" ||
+            remainingClass === "remaining-empty";
+
+        if (needsWaste) {
+            wasteIcon = "⚠️ ";
+            if (expiryClass === "expiry-expired")
+                wasteTitle = "Expired — should be moved to Waste Bay";
+            else if (remainingClass === "remaining-empty")
+                wasteTitle = "0% remaining — should be moved to Waste Bay";
+        }
+
+        /* ⭐ NEW — row always red + popup on hover */
+       if (needsWaste) {
+    tr.classList.add("row-waste");
+
+    tr.addEventListener("mouseenter", (e) => {
+        wastePopup.textContent = wasteTitle;
+        const rect = tr.getBoundingClientRect();
+        wastePopup.style.left = (rect.left + rect.width / 2) + "px";
+        wastePopup.style.top = (rect.top - 8) + "px";
+        wastePopup.style.opacity = "1";
+    });
+
+    tr.addEventListener("mouseleave", () => {
+        wastePopup.style.opacity = "0";
+    });
+}
+
 
         /* ============================
            BUILD TABLE ROW
@@ -1175,7 +1240,7 @@ function renderItems(items) {
             <td><input type="checkbox" class="item-select" data-id="${item.id}"></td>
             <td>${item.name}</td>
             <td>${item.type}</td>
-            <td class="${expiryClass}">${expiryDisplay}</td>
+            <td class="${expiryClass}">${wasteIcon}${expiryDisplay}</td>
             <td>${item.calories || ""}</td>
             <td>${shortenLocation(item.location || "")}</td>
             <td>${item.rfid || ""}</td>
