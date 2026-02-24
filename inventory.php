@@ -875,7 +875,6 @@ $user = $_SESSION['user'];
             setupSearch();
             setupForm();
             setupIncoming();
-            setupSubmitItem();
 
             const takeBtn = document.getElementById('takeSelectedBtn');
             if (takeBtn) takeBtn.onclick = takeSelected;
@@ -1670,15 +1669,26 @@ function renderIncomingPackageRow(pkg) {
             }).then(r => r.json());
         })
     )
-        .then(results => {
+        .then(async results => {
             const err = results.find(r => r.error);
             if (err) {
                 alert("Error placing package: " + err.error);
                 return;
             }
 
+            // Refresh tree
+            await loadTree();
+
+            // Auto-select the last created node
+            const last = results[results.length - 1];
+            if (last && last.new_node_id) {
+                const targetNode = findNodeById(fullTree, String(last.new_node_id));
+                if (targetNode) {
+                    selectNode(targetNode);
+                }
+            }
+
             loadIncoming();
-            loadItems(currentNode.id);
             document.getElementById("incomingModal").style.display = "none";
         })
         .catch(err => {
@@ -1686,53 +1696,6 @@ function renderIncomingPackageRow(pkg) {
             alert("Error placing packages.");
         });
 }
-
-        // Renamed to avoid clobbering the main `setupForm()` above.
-        function setupSubmitItem() {
-            const btn = document.getElementById("submitItemBtn");
-            if (btn) btn.onclick = submitItem;
-        }
-
-        function submitItem() {
-            const nameEl = document.getElementById("itemName");
-            if (!nameEl) {
-                alert("Submit fields not found on this page.");
-                return;
-            }
-
-            const name = nameEl.value;
-            const type = document.getElementById("itemType")?.value || "";
-            const expiry = document.getElementById("itemExpiry")?.value || "";
-            const calories = document.getElementById("itemCalories")?.value || "";
-            const rfid = document.getElementById("itemRFID")?.value || "";
-            const volume = document.getElementById("itemVolume")?.value || "";
-
-            if (!currentNode || !currentNode.id) {
-                alert("Please select a node first.");
-                return;
-            }
-
-            const nodeId = currentNode.id;
-
-            // Use the existing file `create_incoming_item.php` (singular) in `database/`
-            fetch("database/create_incoming_item.php", {
-                    method: "POST",
-                    body: new URLSearchParams({
-                        hierarchy_id: nodeId,
-                        name,
-                        type,
-                        expiry_date: expiry,
-                        calories,
-                        rfid,
-                        volume_liters: volume
-                    })
-                })
-                .then(r => r.text())
-                .then(() => {
-                    loadItems(nodeId);
-                    alert("Item added.");
-                });
-        }
 
         // ─── Highlight row from URL param on load ──────────────────────────────
         function highlightRowFromUrl() {

@@ -132,6 +132,8 @@ $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
             .page-title {
                 font-size: 3rem;
             }
+
+
         }
 
         /* Hide old circle/planetcenter structure */
@@ -149,8 +151,6 @@ $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
 
     <div class="main-planet">
         <div class="planet-content">
-            <h1 class="page-title">Register</h1>
-            <p class="subtitle">CREATE NEW ACCOUNT</p>
 
             <div class="RegistrationForm">
                 <!-- registration form sends data to database/add.php using the post method -->
