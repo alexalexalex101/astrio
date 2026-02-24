@@ -826,7 +826,7 @@ $user = $_SESSION['user'];
             <div class="incoming-resize-handle"></div>
 
             <div class="incoming-header">
-                <div class="incoming-drag-handle">INCOMING ITEMS</div>
+                <div class="incoming-drag-handle">INCOMING PACKAGES</div>
                 <button id="incomingCloseBtn" class="incoming-close-btn">&times;</button>
             </div>
 
@@ -1566,77 +1566,125 @@ $user = $_SESSION['user'];
         }
 
         function loadIncoming() {
-            fetch("database/get_incoming_items.php")
-                .then(r => r.json())
-                .then(items => {
-                    const body = document.getElementById("incomingBody");
-                    const empty = document.getElementById("incomingEmpty");
+    fetch("database/get_incoming_packages.php")
+        .then(r => r.json())
+        .then(packages => {
+            const body = document.getElementById("incomingBody");
+            const empty = document.getElementById("incomingEmpty");
 
-                    body.innerHTML = "";
+            body.innerHTML = "";
 
-                    if (!items || !items.length) {
-                        empty.textContent = "No incoming items.";
-                        return;
-                    }
-
-                    empty.textContent = "";
-
-                    items.forEach(item => {
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                    <td><input type="checkbox" class="incoming-select" data-id="${item.id}"></td>
-                    <td>${item.name}</td>
-                    <td>${item.type}</td>
-                    <td>${item.rfid || ''}</td>
-                    <td><input type="number" min="0" max="100" value="100" class="incoming-remaining" data-id="${item.id}" style="width:70px;"></td>
-                `;
-                        body.appendChild(tr);
-                    });
-                });
-        }
-
-        function moveSelectedIncoming() {
-            if (!currentNode || !currentNode.id) {
-                alert('Select a node to move items into first');
+            if (!packages || !packages.length) {
+                empty.textContent = "No incoming packages.";
                 return;
             }
 
-            const checks = Array.from(document.querySelectorAll('.incoming-select:checked'));
-            if (!checks.length) {
-                alert('No incoming items selected');
-                return;
-            }
+            empty.textContent = "";
 
-            const ids = checks.map(c => c.dataset.id);
-            const remainingInputs = document.querySelectorAll('.incoming-remaining');
-            const remainingMap = {};
-            remainingInputs.forEach(inp => {
-                const id = inp.dataset.id;
-                const val = parseInt(inp.value, 10);
-                if (!isNaN(val)) remainingMap[id] = Math.max(0, Math.min(100, val));
+            packages.forEach(pkg => {
+                body.appendChild(renderIncomingPackageRow(pkg));
             });
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById("incomingEmpty").textContent =
+                "Error loading incoming packages.";
+        });
+}
+function renderIncomingPackageRow(pkg) {
+    const tr = document.createElement("tr");
 
-            fetch('database/add_incoming_item_to_node.php', {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        ids: ids.join(','),
-                        hierarchy_id: currentNode.id,
-                        remaining: JSON.stringify(remainingMap)
-                    })
-                })
-                .then(r => r.text())
-                .then(text => {
-                    if (text.trim() === 'OK') {
-                        // refresh items in current node and incoming list
-                        loadItems(currentNode.id);
-                        loadIncoming();
-                        document.getElementById('incomingModal').style.display = 'none';
-                    } else {
-                        alert('Error: ' + text);
-                    }
-                })
-                .catch(err => alert('Request failed: ' + err));
-        }
+    const tdCheck = document.createElement("td");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "incoming-select";
+    cb.dataset.packageId = pkg.package_instance_id;
+    tdCheck.appendChild(cb);
+
+    const tdMain = document.createElement("td");
+
+    const title = document.createElement("div");
+    title.style.fontWeight = "600";
+    title.textContent = `${pkg.package_name} (${pkg.items.length} items)`;
+
+    const expandBtn = document.createElement("button");
+    expandBtn.textContent = "Expand";
+    expandBtn.className = "control-btn";
+    expandBtn.style.marginTop = "6px";
+    expandBtn.style.padding = "4px 8px";
+    expandBtn.style.fontSize = "11px";
+
+    const details = document.createElement("div");
+    details.style.display = "none";
+    details.style.marginTop = "6px";
+    details.style.fontSize = "11px";
+
+    expandBtn.onclick = () => {
+        const open = details.style.display === "none";
+        details.style.display = open ? "block" : "none";
+        expandBtn.textContent = open ? "Collapse" : "Expand";
+    };
+
+    pkg.items.forEach(it => {
+        const line = document.createElement("div");
+        line.textContent = `${it.name} (${it.type}) — RFID: ${it.rfid || "N/A"}`;
+        details.appendChild(line);
+    });
+
+    tdMain.appendChild(title);
+    tdMain.appendChild(expandBtn);
+    tdMain.appendChild(details);
+
+    tr.appendChild(tdCheck);
+    tr.appendChild(tdMain);
+
+    return tr;
+}
+        function moveSelectedIncoming() {
+    if (!currentNode || !currentNode.id) {
+        alert("Select a node first.");
+        return;
+    }
+
+    const checks = Array.from(
+        document.querySelectorAll(".incoming-select:checked")
+    );
+
+    if (!checks.length) {
+        alert("No packages selected.");
+        return;
+    }
+
+    const packageIds = checks.map(cb => cb.dataset.packageId);
+
+    Promise.all(
+        packageIds.map(id => {
+            const fd = new FormData();
+            fd.append("package_instance_id", id);
+            fd.append("hierarchy_id", currentNode.id);
+
+            return fetch("database/place_package.php", {
+                method: "POST",
+                body: fd
+            }).then(r => r.json());
+        })
+    )
+        .then(results => {
+            const err = results.find(r => r.error);
+            if (err) {
+                alert("Error placing package: " + err.error);
+                return;
+            }
+
+            loadIncoming();
+            loadItems(currentNode.id);
+            document.getElementById("incomingModal").style.display = "none";
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error placing packages.");
+        });
+}
 
         // ─── Highlight row from URL param on load ──────────────────────────────
         function highlightRowFromUrl() {
