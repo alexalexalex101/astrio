@@ -234,3 +234,254 @@ SET h.capacity_liters = s.capacity_liters
 WHERE h.ctb_type IS NOT NULL;
 
 
+USE inventory;
+
+CREATE TABLE IF NOT EXISTS food_packages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    package_name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS food_package_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    package_id INT NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    item_type VARCHAR(100) NOT NULL,
+    calories INT NULL,
+    expiry_days INT NULL,
+    rfid_prefix VARCHAR(255) NOT NULL,
+    quantity_per_package INT NOT NULL DEFAULT 1,
+    volume_liters DECIMAL(6,3) NULL,
+    INDEX (package_id),
+    CONSTRAINT fk_food_package_items_package
+        FOREIGN KEY (package_id) REFERENCES food_packages(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS incoming_packages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    schedule_order_id INT NULL,
+    package_id INT NOT NULL,
+    package_name VARCHAR(255) NOT NULL,
+    hierarchy_id INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX (schedule_order_id),
+    INDEX (package_id),
+    CONSTRAINT fk_incoming_packages_schedule
+        FOREIGN KEY (schedule_order_id) REFERENCES schedule_orders(id)
+        ON DELETE SET NULL,
+    CONSTRAINT fk_incoming_packages_package
+        FOREIGN KEY (package_id) REFERENCES food_packages(id)
+        ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS incoming_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    package_instance_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(100) NOT NULL,
+    expiry_date DATE NULL,
+    calories INT NULL,
+    rfid VARCHAR(255) NOT NULL,
+    remaining_percent INT NOT NULL DEFAULT 100,
+    volume_liters DECIMAL(6,3) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX (package_instance_id),
+    CONSTRAINT fk_incoming_items_package_instance
+        FOREIGN KEY (package_instance_id) REFERENCES incoming_packages(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO food_packages (package_name, description)
+VALUES ('Protein Strip', 'Strip containing 10 chocolate protein bars');
+SET @pkg_protein_strip := LAST_INSERT_ID();
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+VALUES
+(@pkg_protein_strip, 'Protein Bar - Chocolate 50g', 'food', 220, 365, 'RFID-FOOD-BAR-', 10, 0.20);
+
+INSERT INTO food_packages (package_name, description)
+VALUES ('Eggs Pouch', 'Pouch containing 3 rehydratable scrambled eggs packs');
+SET @pkg_eggs_pouch := LAST_INSERT_ID();
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+VALUES
+(@pkg_eggs_pouch, 'Rehydratable Scrambled Eggs 120g Pouch', 'food', 350, 365, 'RFID-FOOD-EGGS-', 3, 0.60);
+
+INSERT INTO food_packages (package_name, description)
+VALUES ('Coffee Sleeve', 'Sleeve containing 20 instant coffee packs');
+SET @pkg_coffee_sleeve := LAST_INSERT_ID();
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+VALUES
+(@pkg_coffee_sleeve, 'Instant Coffee Pack 10g', 'food', 5, 730, 'RFID-FOOD-COFFEE-', 20, 0.05);
+
+INSERT INTO food_packages (package_name, description)
+VALUES ('Analgesic Strip', 'Strip containing ibuprofen tablets');
+SET @pkg_analgesic_strip := LAST_INSERT_ID();
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+VALUES
+(@pkg_analgesic_strip, 'Ibuprofen 200mg Tablet', 'medical', NULL, 365, 'RFID-MED-IBU-', 2, 0.01);
+
+INSERT INTO food_packages (package_name, description)
+VALUES ('Antibiotic Vial Row', 'Row containing amoxicillin vials');
+SET @pkg_antibiotic_row := LAST_INSERT_ID();
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+VALUES
+(@pkg_antibiotic_row, 'Amoxicillin 500mg Vial', 'medical', NULL, 365, 'RFID-MED-AMOX-', 2, 0.03);
+
+INSERT INTO food_packages (package_name, description)
+VALUES ('Spectrum Analyzer Case', 'Case containing spectrum analyzer main unit and calibration block');
+SET @pkg_sa_case := LAST_INSERT_ID();
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+VALUES
+(@pkg_sa_case, 'RF Spectrum Analyzer 9kHz-6GHz', 'scientific', NULL, NULL, 'RFID-SCI-SA-', 1, 18.00),
+(@pkg_sa_case, 'Spectrum Analyzer Calibration Block', 'scientific', NULL, NULL, 'RFID-SCI-SA-CAL-', 1, 1.50);
+
+INSERT INTO food_packages (package_name, description)
+VALUES ('Fiber Scope Case', 'Case containing fiber inspection scope');
+SET @pkg_fiber_case := LAST_INSERT_ID();
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+VALUES
+(@pkg_fiber_case, 'Fiber Inspection Scope Handheld', 'scientific', NULL, NULL, 'RFID-SCI-FIB-', 1, 3.20);
+
+INSERT INTO food_packages (package_name, description)
+VALUES ('Pump Crate', 'Crate containing pump assembly');
+SET @pkg_pump_crate := LAST_INSERT_ID();
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+VALUES
+(@pkg_pump_crate, 'Pump Assembly Water Recycling', 'equipment', NULL, NULL, 'RFID-SPARE-PUMP-', 1, 25.00);
+
+INSERT INTO food_packages (package_name, description)
+VALUES ('Fan Crate', 'Crate containing fan module');
+SET @pkg_fan_crate := LAST_INSERT_ID();
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+VALUES
+(@pkg_fan_crate, 'Fan Module Environmental Control', 'equipment', NULL, NULL, 'RFID-SPARE-FAN-', 1, 12.00);
+
+ALTER TABLE food_packages
+ADD COLUMN package_type VARCHAR(50) NOT NULL DEFAULT 'container';
+
+UPDATE food_packages SET package_type='STRIP'
+WHERE package_name LIKE '%Strip%';
+
+UPDATE food_packages SET package_type='POUCH'
+WHERE package_name LIKE '%Pouch%';
+
+UPDATE food_packages SET package_type='SLEEVE'
+WHERE package_name LIKE '%Sleeve%';
+
+UPDATE food_packages SET package_type='CASE'
+WHERE package_name LIKE '%Case%' OR package_name LIKE '%Food Package%';
+
+UPDATE food_packages SET package_type=package_name
+WHERE package_name LIKE 'CTB-%';
+
+UPDATE food_packages SET package_type='STACK'
+WHERE package_name LIKE '%Stack%';
+
+DELETE FROM food_package_items;
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item A'), 'food', 100, 365, CONCAT(LEFT(package_name,3),'-A'), 1, 0.2
+FROM food_packages WHERE package_type='STRIP';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item B'), 'food', 100, 365, CONCAT(LEFT(package_name,3),'-B'), 1, 0.2
+FROM food_packages WHERE package_type='STRIP';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item C'), 'food', 100, 365, CONCAT(LEFT(package_name,3),'-C'), 1, 0.2
+FROM food_packages WHERE package_type='STRIP';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item A'), 'food', 80, 365, CONCAT(LEFT(package_name,3),'-A'), 1, 0.3
+FROM food_packages WHERE package_type='POUCH';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item B'), 'food', 80, 365, CONCAT(LEFT(package_name,3),'-B'), 1, 0.3
+FROM food_packages WHERE package_type='POUCH';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item C'), 'food', 80, 365, CONCAT(LEFT(package_name,3),'-C'), 1, 0.3
+FROM food_packages WHERE package_type='POUCH';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item A'), 'food', 200, 365, CONCAT(LEFT(package_name,3),'-A'), 1, 0.5
+FROM food_packages WHERE package_type='CASE';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item B'), 'food', 200, 365, CONCAT(LEFT(package_name,3),'-B'), 1, 0.5
+FROM food_packages WHERE package_type='CASE';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item C'), 'food', 200, 365, CONCAT(LEFT(package_name,3),'-C'), 1, 0.5
+FROM food_packages WHERE package_type='CASE';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item A'), 'equipment', NULL, 9999, CONCAT(LEFT(package_name,3),'-A'), 1, 2.0
+FROM food_packages WHERE package_type LIKE 'CTB%';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item B'), 'equipment', NULL, 9999, CONCAT(LEFT(package_name,3),'-B'), 1, 2.0
+FROM food_packages WHERE package_type LIKE 'CTB%';
+
+INSERT INTO food_package_items
+(package_id, item_name, item_type, calories, expiry_days, rfid_prefix, quantity_per_package, volume_liters)
+SELECT id, CONCAT(package_name, ' Item C'), 'equipment', NULL, 9999, CONCAT(LEFT(package_name,3),'-C'), 1, 2.0
+FROM food_packages WHERE package_type LIKE 'CTB%';
+ALTER TABLE hierarchy ADD COLUMN is_generated_package_node TINYINT(1) DEFAULT 0;
+
+ALTER TABLE hierarchy
+ADD COLUMN used_liters DECIMAL(10,2) NOT NULL DEFAULT 0;
+
+UPDATE incoming_items ii
+JOIN incoming_packages ip ON ii.package_instance_id = ip.id
+JOIN food_package_items fpi 
+    ON fpi.package_id = ip.package_id
+    AND fpi.item_name COLLATE utf8mb4_general_ci = ii.name COLLATE utf8mb4_general_ci
+SET ii.volume_liters = fpi.volume_liters;
+
+UPDATE items i
+JOIN incoming_items ii 
+    ON ii.name COLLATE utf8mb4_general_ci = i.name COLLATE utf8mb4_general_ci
+    AND ii.rfid COLLATE utf8mb4_general_ci = i.rfid COLLATE utf8mb4_general_ci
+SET i.volume_liters = ii.volume_liters;
+
+UPDATE hierarchy h
+JOIN (
+    SELECT hierarchy_id, 
+           SUM(volume_liters * (remaining_percent / 100)) AS used
+    FROM items
+    GROUP BY hierarchy_id
+) x ON x.hierarchy_id = h.id
+SET h.used_liters = x.used
+WHERE h.is_generated_package_node = 1;
+
