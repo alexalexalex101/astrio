@@ -52,21 +52,6 @@ if ($res) {
             z-index: 100;
         }
 
-        #backbutton {
-            position: fixed;
-            top: 1.8rem;
-            right: 10rem;
-            padding: 0.8rem 1.6rem;
-            font-size: 1.1rem;
-            border-radius: 2.5rem;
-            background: rgba(12, 18, 44, 0.82);
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            border: 1px solid rgba(180, 180, 255, 0.15);
-            z-index: 100;
-        }
-
         .logs-wrap {
             width: min(1200px, 94vw);
             margin: 8.5rem auto 2.5rem;
