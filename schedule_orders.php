@@ -62,47 +62,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pkgInstance = $stmt->insert_id;
 
         foreach ($spec as $it) {
-          $expiry = null;
-          if ($it['expiry_days'] !== null) {
-            $expiry = date('Y-m-d', strtotime("+{$it['expiry_days']} days"));
-          }
+            $expiry = null;
+            if ($it['expiry_days'] !== null) {
+                $expiry = date('Y-m-d', strtotime("+{$it['expiry_days']} days"));
+            }
 
-          $rfid = $it['rfid_prefix'] . str_pad((string)rand(1,9999), 4, '0', STR_PAD_LEFT);
+            $rfid = $it['rfid_prefix'] . str_pad((string)rand(1,9999), 4, '0', STR_PAD_LEFT);
 
-          $ins = $conn->prepare("
-            INSERT INTO incoming_items (
-                package_instance_id,
-                name,
-                type,
-                expiry_date,
-                calories,
-                rfid,
-                remaining_percent,
-                volume_liters
-            )
-            SELECT
-                ?,                          -- package_instance_id
-                item_name,                  -- from food_package_items
-                item_type,
-                DATE_ADD(CURDATE(), INTERVAL expiry_days DAY),
-                calories,
-                rfid_prefix,
-                100,
-                volume_liters               -- THIS is the fix
-            FROM food_package_items
-            WHERE package_id = ?
-        ");
-          $ins->bind_param(
-            "isssisi",
-            $pkgInstance,
-            $it['item_name'],
-            $it['item_type'],
-            $expiry,
-            $it['calories'],
-            $rfid,
-            $it['volume_liters']
-          );
-          $ins->execute();
+            $ins = $conn->prepare("
+                INSERT INTO incoming_items (
+                    package_instance_id,
+                    name,
+                    type,
+                    expiry_date,
+                    calories,
+                    rfid,
+                    remaining_percent,
+                    volume_liters
+                )
+                SELECT
+                    ?,
+                    item_name,
+                    item_type,
+                    ?,
+                    calories,
+                    ?,
+                    100,
+                    volume_liters
+                FROM food_package_items
+                WHERE package_id = ?
+            ");
+
+            $ins->bind_param(
+                "issi",               // int, string (date), string (rfid), int
+                $pkgInstance,
+                $expiry,
+                $rfid,
+                $pkgId
+            );
+
+            $ins->execute();
         }
       }
 
