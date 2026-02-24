@@ -70,10 +70,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $rfid = $it['rfid_prefix'] . str_pad((string)rand(1,9999), 4, '0', STR_PAD_LEFT);
 
           $ins = $conn->prepare("
-            INSERT INTO incoming_items
-            (package_instance_id, name, type, expiry_date, calories, rfid, remaining_percent, volume_liters)
-            VALUES (?, ?, ?, ?, ?, ?, 100, ?)
-          ");
+            INSERT INTO incoming_items (
+                package_instance_id,
+                name,
+                type,
+                expiry_date,
+                calories,
+                rfid,
+                remaining_percent,
+                volume_liters
+            )
+            SELECT
+                ?,                          -- package_instance_id
+                item_name,                  -- from food_package_items
+                item_type,
+                DATE_ADD(CURDATE(), INTERVAL expiry_days DAY),
+                calories,
+                rfid_prefix,
+                100,
+                volume_liters               -- THIS is the fix
+            FROM food_package_items
+            WHERE package_id = ?
+        ");
           $ins->bind_param(
             "isssisi",
             $pkgInstance,

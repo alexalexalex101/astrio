@@ -1670,15 +1670,26 @@ function renderIncomingPackageRow(pkg) {
             }).then(r => r.json());
         })
     )
-        .then(results => {
+        .then(async results => {
             const err = results.find(r => r.error);
             if (err) {
                 alert("Error placing package: " + err.error);
                 return;
             }
 
+            // Refresh tree
+            await loadTree();
+
+            // Auto-select the last created node
+            const last = results[results.length - 1];
+            if (last && last.new_node_id) {
+                const targetNode = findNodeById(fullTree, String(last.new_node_id));
+                if (targetNode) {
+                    selectNode(targetNode);
+                }
+            }
+
             loadIncoming();
-            loadItems(currentNode.id);
             document.getElementById("incomingModal").style.display = "none";
         })
         .catch(err => {
