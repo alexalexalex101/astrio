@@ -7,6 +7,8 @@ if (isset($_SESSION['user'])) header('location: dashboard.php');
 $error_message = '';
 if ($_POST) {
     include('database/connection.php');
+    include_once('database/action_logger.php');
+    $conn = isset($conn) ? $conn : null;
     //get user and password if the form is sumitted by post
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -25,13 +27,16 @@ if ($_POST) {
         //btw to test a password just use the jane doe one from the database
         if (password_verify($password, $user['password'])) {
             $_SESSION['user'] = $user;
+            log_action($conn, 'nasalogin', 'success', ['email' => $username, 'result' => 'login_success'], 'nasalogin.php');
             header('Location: dashboard.php');
             exit;
         } else {
             $error_message = 'Please make sure that username and password are correct. ';
+            log_action($conn, 'nasalogin', 'error', ['email' => $username, 'reason' => 'invalid_password'], 'nasalogin.php');
         }
     } else {
         $error_message = 'Please make sure that username and password are correct. ';
+        log_action($conn, 'nasalogin', 'error', ['email' => $username, 'reason' => 'user_not_found'], 'nasalogin.php');
     }
 }
 ?>

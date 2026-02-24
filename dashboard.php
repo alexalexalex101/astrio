@@ -237,7 +237,7 @@ $fullName = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
             <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='inventory.php'">INVENTORY</div>
             <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='visualization_tree.php'">VISUALIZATION</div>
             <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='schedule_orders.php'">ORDERS</div>
-            <div class="orbit-moon" role="button" tabindex="0" onclick="alert('Logs page coming soon')">LOGS</div>
+            <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='logs.php'">LOGS</div>
             <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='contracts.php'">CONTRACTS</div>
         </div>
     </div>

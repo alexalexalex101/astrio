@@ -1,5 +1,8 @@
 <?php
 session_start();
+include('connection.php');
+include_once('action_logger.php');
+$conn = isset($conn) ? $conn : null;
 
 // get table name from the session
 $table_name = $_SESSION['table'] ?? 'users';
@@ -18,6 +21,7 @@ $response = [];
 
 // make sure none of the form fields are empty
 if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
+    log_action($conn, 'add', 'error', ['reason' => 'missing_required_fields', 'email' => $email], 'add.php');
     $response = [
         'success' => false,
         'message' => 'All fields are required.'
@@ -29,6 +33,7 @@ if (empty($first_name) || empty($last_name) || empty($email) || empty($password)
 
 // check if the email typed in looks like a real email
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    log_action($conn, 'add', 'error', ['reason' => 'invalid_email', 'email' => $email], 'add.php');
     $response = [
         'success' => false,
         'message' => 'Please enter a valid email address.'
@@ -39,9 +44,6 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 try {
-    // connect to the database
-    include('connection.php');
-
     // check if this email is already in the table
     // this stops users from signing up with the same email
     $check = $conn->prepare("SELECT id FROM $table_name WHERE email = :email LIMIT 1");
@@ -49,6 +51,7 @@ try {
 
     // if the query finds 1 or more rows, the email is already used
     if ($check->rowCount() > 0) {
+        log_action($conn, 'add', 'error', ['reason' => 'email_exists', 'email' => $email], 'add.php');
         $response = [
             'success' => false,
             'message' => 'This email is already registered.'
@@ -77,6 +80,7 @@ try {
         'success' => true,
         'message' => 'User successfully added! Please log in.'
     ];
+    log_action($conn, 'add', 'success', ['email' => $email, 'table' => $table_name], 'add.php');
 
     $_SESSION['response'] = $response;
 
@@ -85,6 +89,7 @@ try {
     exit;
 } catch (PDOException $e) {
     // if something goes wrong with the database, show the message
+    log_action($conn, 'add', 'error', ['reason' => 'db_exception', 'email' => $email, 'error' => $e->getMessage()], 'add.php');
     $response = [
         'success' => false,
         'message' => 'Database error: ' . $e->getMessage()

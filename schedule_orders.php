@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'database/db.php';
+require_once 'database/action_logger.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
@@ -32,15 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   if (!$scheduledDate) {
     $error = "Please choose a scheduled date.";
+    log_action($conn, 'schedule_orders', 'error', ['reason' => 'missing_scheduled_date'], 'schedule_orders.php');
   } elseif ($pkgQty <= 0) {
     $error = "Please enter a quantity.";
+    log_action($conn, 'schedule_orders', 'error', ['reason' => 'invalid_quantity', 'quantity' => $pkgQty], 'schedule_orders.php');
   } elseif ($pkgId === 0) {
     $error = "Please select a package.";
+    log_action($conn, 'schedule_orders', 'error', ['reason' => 'missing_package'], 'schedule_orders.php');
   } else {
 
     $user_id = null;
-    if (isset($_SESSION['user_id'])) $user_id = (int)$_SESSION['user_id'];
-    elseif (isset($_SESSION['id']))  $user_id = (int)$_SESSION['id'];
+    if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id'])) {
+      $user_id = (int)$_SESSION['user']['id'];
+    } elseif (isset($_SESSION['user_id'])) {
+      $user_id = (int)$_SESSION['user_id'];
+    } elseif (isset($_SESSION['id'])) {
+      $user_id = (int)$_SESSION['id'];
+    }
 
     $orderToStation = [
       'package' => ['id'=>$pkgId, 'qty'=>$pkgQty]
@@ -48,6 +57,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $conn->begin_transaction();
     try {
+      $orderJson = json_encode($orderToStation, JSON_UNESCAPED_UNICODE);
+      $scheduledOrderId = null;
+
+      if ($user_id === null) {
+        $stmtLog = $conn->prepare("
+          INSERT INTO schedule_orders (user_id, order_to_station, sending_back, priority, scheduled_date)
+          VALUES (NULL, ?, '[]', ?, ?)
+        ");
+        $stmtLog->bind_param("sss", $orderJson, $priority, $scheduledDate);
+      } else {
+        $stmtLog = $conn->prepare("
+          INSERT INTO schedule_orders (user_id, order_to_station, sending_back, priority, scheduled_date)
+          VALUES (?, ?, '[]', ?, ?)
+        ");
+        $stmtLog->bind_param("isss", $user_id, $orderJson, $priority, $scheduledDate);
+      }
+      $stmtLog->execute();
+      $scheduledOrderId = (int)$stmtLog->insert_id;
 
       $pkgName = $conn->query("SELECT package_name FROM food_packages WHERE id=$pkgId")->fetch_assoc()['package_name'];
       $spec = $conn->query("SELECT * FROM food_package_items WHERE package_id=$pkgId")->fetch_all(MYSQLI_ASSOC);
@@ -55,9 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       for ($i=0; $i<$pkgQty; $i++) {
         $stmt = $conn->prepare("
           INSERT INTO incoming_packages (schedule_order_id, package_id, package_name, hierarchy_id)
-          VALUES (NULL, ?, ?, 0)
+          VALUES (?, ?, ?, 0)
         ");
-        $stmt->bind_param("is", $pkgId, $pkgName);
+        $stmt->bind_param("iis", $scheduledOrderId, $pkgId, $pkgName);
         $stmt->execute();
         $pkgInstance = $stmt->insert_id;
 
@@ -88,25 +115,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
       }
 
-      $orderJson = json_encode($orderToStation, JSON_UNESCAPED_UNICODE);
-
-      if ($user_id === null) {
-        $stmtLog = $conn->prepare("
-          INSERT INTO schedule_orders (user_id, order_to_station, sending_back, priority, scheduled_date)
-          VALUES (NULL, ?, '[]', ?, ?)
-        ");
-        $stmtLog->bind_param("sss", $orderJson, $priority, $scheduledDate);
-      } else {
-        $stmtLog = $conn->prepare("
-          INSERT INTO schedule_orders (user_id, order_to_station, sending_back, priority, scheduled_date)
-          VALUES (?, ?, '[]', ?, ?)
-        ");
-        $stmtLog->bind_param("isss", $user_id, $orderJson, $priority, $scheduledDate);
-      }
-      $stmtLog->execute();
-
       $conn->commit();
       $success = "Package order scheduled.";
+      log_action($conn, 'schedule_orders', 'success', [
+        'package_id' => $pkgId,
+        'package_qty' => $pkgQty,
+        'priority' => $priority,
+        'scheduled_date' => $scheduledDate
+      ], 'schedule_orders.php');
 
       $old = [
         'package_id'=>'','package_qty'=>'',
@@ -116,6 +132,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Throwable $e) {
       $conn->rollback();
       $error = $e->getMessage();
+      log_action($conn, 'schedule_orders', 'error', [
+        'package_id' => $pkgId,
+        'package_qty' => $pkgQty,
+        'priority' => $priority,
+        'scheduled_date' => $scheduledDate,
+        'error' => $e->getMessage()
+      ], 'schedule_orders.php');
     }
   }
 }

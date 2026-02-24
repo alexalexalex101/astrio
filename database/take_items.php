@@ -1,7 +1,9 @@
 <?php
 require 'db.php';
+require_once 'action_logger.php';
 
 if (!isset($_POST['ids']) || !isset($_POST['amount'])) {
+    log_action($conn, 'take_items', 'error', ['reason' => 'missing_parameters'], 'take_items.php');
     exit('Missing parameters');
 }
 
@@ -9,7 +11,10 @@ $ids = array_filter(array_map('intval', explode(',', $_POST['ids'])));
 $amount = intval($_POST['amount']);
 if ($amount < 0) $amount = 0;
 
-if (!$ids) exit('No ids');
+if (!$ids) {
+    log_action($conn, 'take_items', 'error', ['reason' => 'no_ids'], 'take_items.php');
+    exit('No ids');
+}
 
 // Build placeholders
 $placeholders = implode(',', array_fill(0, count($ids), '?'));
@@ -17,6 +22,7 @@ $placeholders = implode(',', array_fill(0, count($ids), '?'));
 $sql = "UPDATE items SET remaining_percent = GREATEST(0, remaining_percent - ?) WHERE id IN ($placeholders)";
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
+    log_action($conn, 'take_items', 'error', ['reason' => 'prepare_failed', 'db_error' => $conn->error], 'take_items.php');
     exit('Prepare failed: ' . $conn->error);
 }
 
@@ -35,6 +41,12 @@ for ($i = 0; $i < count($params); $i++) {
 call_user_func_array([$stmt, 'bind_param'], $bind_names);
 
 $ok = $stmt->execute();
+
+if ($ok) {
+    log_action($conn, 'take_items', 'success', ['ids' => $ids, 'amount' => $amount], 'take_items.php');
+} else {
+    log_action($conn, 'take_items', 'error', ['ids' => $ids, 'amount' => $amount, 'db_error' => $stmt->error], 'take_items.php');
+}
 
 echo $ok ? 'OK' : ('ERR: ' . $stmt->error);
 

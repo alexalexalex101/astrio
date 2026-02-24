@@ -1,5 +1,6 @@
 <?php
 require "db.php";
+require_once "action_logger.php";
 
 $name = $_POST['name'] ?? '';
 $hierarchy_id = intval($_POST['hierarchy_id'] ?? 0);
@@ -11,6 +12,7 @@ $type = $_POST['type'] ?? 'food';
 $remaining = isset($_POST['remaining_percent']) ? intval($_POST['remaining_percent']) : 100;
 
 if (trim($name) === '' || $hierarchy_id === 0) {
+    log_action($conn, 'create_item', 'error', ['reason' => 'missing_fields', 'name' => $name, 'hierarchy_id' => $hierarchy_id], 'create_item.php');
     exit("ERR: missing fields");
 }
 
@@ -20,6 +22,7 @@ $stmt = $conn->prepare("
 
 ");
 if (!$stmt) {
+    log_action($conn, 'create_item', 'error', ['reason' => 'prepare_failed', 'db_error' => $conn->error], 'create_item.php');
     exit("ERR: Prepare failed: " . $conn->error);
 }
 
@@ -41,4 +44,9 @@ $stmt->bind_param(
 );
 
 $ok = $stmt->execute();
+if ($ok) {
+    log_action($conn, 'create_item', 'success', ['name' => $name, 'hierarchy_id' => $hierarchy_id, 'type' => $type], 'create_item.php');
+} else {
+    log_action($conn, 'create_item', 'error', ['name' => $name, 'hierarchy_id' => $hierarchy_id, 'db_error' => $stmt->error], 'create_item.php');
+}
 echo $ok ? "OK" : "ERR: " . $stmt->error;

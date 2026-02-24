@@ -1,6 +1,7 @@
 <?php
   session_start();
   include("database/connection.php");
+  include_once("database/action_logger.php");
 
   /* ------------------------------
     CONTRACT VALUE FORMATTER
@@ -21,22 +22,48 @@
     HANDLE ADD CONTRACT
   ------------------------------ */
   if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
-    $stmt = $conn->prepare("INSERT INTO contracts (supplier_id, contract_name, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([
-      $_POST['supplier_id'],
-      $_POST['contract_name'],
-      $_POST['start_date'],
-      $_POST['end_date'],
-      $_POST['status']
-    ]);
+    try {
+      $stmt = $conn->prepare("INSERT INTO contracts (supplier_id, contract_name, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)");
+      $stmt->execute([
+        $_POST['supplier_id'],
+        $_POST['contract_name'],
+        $_POST['start_date'],
+        $_POST['end_date'],
+        $_POST['status']
+      ]);
+      log_action($conn, 'contracts', 'success', [
+        'operation' => 'add_contract',
+        'contract_name' => $_POST['contract_name'],
+        'supplier_id' => (int)$_POST['supplier_id']
+      ], 'contracts.php');
+    } catch (Throwable $e) {
+      log_action($conn, 'contracts', 'error', [
+        'operation' => 'add_contract',
+        'error' => $e->getMessage()
+      ], 'contracts.php');
+      throw $e;
+    }
   }
 
   /* ------------------------------
     HANDLE DELETE
   ------------------------------ */
   if (isset($_GET['delete'])) {
-    $stmt = $conn->prepare("DELETE FROM contracts WHERE contract_id = ?");
-    $stmt->execute([$_GET['delete']]);
+    try {
+      $stmt = $conn->prepare("DELETE FROM contracts WHERE contract_id = ?");
+      $stmt->execute([$_GET['delete']]);
+      log_action($conn, 'contracts', 'success', [
+        'operation' => 'delete_contract',
+        'contract_id' => (int)$_GET['delete']
+      ], 'contracts.php');
+    } catch (Throwable $e) {
+      log_action($conn, 'contracts', 'error', [
+        'operation' => 'delete_contract',
+        'contract_id' => (int)$_GET['delete'],
+        'error' => $e->getMessage()
+      ], 'contracts.php');
+      throw $e;
+    }
   }
 
   /* ------------------------------
