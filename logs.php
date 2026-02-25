@@ -24,6 +24,7 @@ if ($res) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -74,13 +75,32 @@ if ($res) {
             border-radius: 10px;
         }
 
+        .table-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: rgba(75, 83, 185, 0.6);
+            border-radius: 10px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(75, 83, 185, 0.8);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             min-width: 980px;
         }
 
-        th, td {
+        th,
+        td {
             padding: 0.65rem 0.6rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             text-align: left;
@@ -95,16 +115,35 @@ if ($res) {
             z-index: 2;
         }
 
-        .status-success { color: #8effad; font-weight: 700; }
-        .status-error { color: #ff8f8f; font-weight: 700; }
+        .status-success {
+            color: #8effad;
+            font-weight: 700;
+        }
+
+        .status-error {
+            color: #ff8f8f;
+            font-weight: 700;
+        }
+
         .details-cell {
             white-space: pre-wrap;
             word-break: break-word;
             max-width: 360px;
             font-family: monospace;
         }
+
+        @media (min-width: 769px) and (max-width: 1200px) and (orientation: landscape) {
+            .table-scroll {
+                margin-top: 2rem;
+                max-height: 61vh;
+            }
+        }
     </style>
+
+
+
 </head>
+
 <body>
     <a href="dashboard.php">
         <img src="images/NASA-Logo.png" alt="NASA Logo" class="nasalogo">
@@ -129,17 +168,19 @@ if ($res) {
                 </thead>
                 <tbody>
                     <?php if (empty($logs)): ?>
-                        <tr><td colspan="8">No logs found.</td></tr>
+                        <tr>
+                            <td colspan="8">No logs found.</td>
+                        </tr>
                     <?php else: ?>
                         <?php foreach ($logs as $log): ?>
                             <?php
-                                $status = strtolower((string)$log['status']);
-                                $statusClass = $status === 'success' ? 'status-success' : ($status === 'error' ? 'status-error' : '');
+                            $status = strtolower((string)$log['status']);
+                            $statusClass = $status === 'success' ? 'status-success' : ($status === 'error' ? 'status-error' : '');
 
-                                // Changed: prefer email first
-                                $userLabel = trim((string)($log['user_email'] ?? ''));
-                                if ($userLabel === '') $userLabel = trim((string)($log['user_name'] ?? ''));
-                                if ($userLabel === '') $userLabel = $log['user_id'] !== null ? ('User #' . $log['user_id']) : 'Guest';
+                            // Changed: prefer email first
+                            $userLabel = trim((string)($log['user_email'] ?? ''));
+                            if ($userLabel === '') $userLabel = trim((string)($log['user_name'] ?? ''));
+                            if ($userLabel === '') $userLabel = $log['user_id'] !== null ? ('User #' . $log['user_id']) : 'Guest';
                             ?>
                             <tr>
                                 <td><?= (int)$log['id'] ?></td>
@@ -158,5 +199,5 @@ if ($res) {
         </div>
     </div>
 </body>
-</html>
 
+</html>

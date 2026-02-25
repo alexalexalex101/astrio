@@ -634,7 +634,7 @@ input:focus, select:focus{
         </select>
 
         <label>Quantity (packages)</label>
-        <input type="number" min="1" name="package_qty" value="<?=h($old['package_qty'])?>">
+        <input type="number" min="1" name="package_qty" value="<?=h($old['package_qty'])?>" placeholder="e.g. 5">
       </div>
 
       <div class="card meta">

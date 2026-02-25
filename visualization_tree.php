@@ -10,12 +10,13 @@ if (!isset($_SESSION['user'])) {
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>Inventory Hierarchy - Mermaid</title>
     <link rel="stylesheet" href="https://use.typekit.net/pen4uct.css">
-
-    <!-- Mermaid -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="default.css">
+    <!-- Local libraries -->
+    <script src="js/mermaid.min.js"></script>
+    <script src="js/hammer.min.js"></script>
 
     <style>
         html,
@@ -27,6 +28,8 @@ if (!isset($_SESSION['user'])) {
             font-family: "League Spartan", sans-serif;
             background: #0a0e16;
             color: #e0e8ff;
+            touch-action: none;
+            /* ← prevents browser pinch/scroll interference */
         }
 
         #app {
@@ -45,71 +48,49 @@ if (!isset($_SESSION['user'])) {
             z-index: 10;
         }
 
-        #current-node {
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        #path {
-            font-size: 15px;
-            color: #a0b0ff;
-            opacity: 0.9;
-        }
-
         #mermaid-container {
             flex: 1;
-            padding: 20px;
-            overflow: auto;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            padding: 10px;
+            overflow: hidden;
+            /* ← important for mobile */
             background: radial-gradient(circle at 50% 30%, #1a2030 0%, #0b111c 100%);
         }
 
-        /* Add this to your <style> block */
-        #mermaid-output svg {
-            min-width: 1400px;
-            /* or whatever feels good */
-            max-width: none !important;
+        #mermaid-viewport {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+            touch-action: none;
+            /* ← allows custom gestures */
         }
 
-        .flowchart .node rect,
-        .flowchart .node foreignObject {
-            min-width: 220px !important;
+        #mermaid-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            will-change: transform;
         }
-
-
-
-        .flowchart .label {
-            font-size: 15px !important;
-        }
-
 
         #details-panel {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 380px;
-            /* ← keep or adjust as needed */
-            max-height: 60vh;
+            bottom: 16px;
+            left: 16px;
+            width: 90%;
+            max-width: 420px;
+            max-height: 55vh;
             overflow-y: auto;
             background: rgba(10, 14, 22, 0.92);
             border-radius: 12px;
-            padding: 16px 20px;
+            padding: 16px;
             border: 1px solid rgba(120, 150, 255, 0.35);
             backdrop-filter: blur(8px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
             z-index: 20;
-            display: flex;
-            /* ← added */
-            flex-direction: column;
-            /* ← ensures vertical stacking */
-            gap: 12px;
-            /* ← nice spacing between cards */
-        }
-
-        #details-panel h3 {
-            font-size: 18px;
+            touch-action: pan-y pinch-zoom;
+            /* ← allows scrolling + pinch inside panel */
         }
 
         /* Individual item cards - full width, column-friendly */
@@ -223,8 +204,111 @@ if (!isset($_SESSION['user'])) {
         .flowchart .node:hover rect {
             filter: brightness(1.15);
         }
+
+        h3 {
+            margin-bottom: 1rem;
+        }
+
+        #node-search-container {
+            position: relative;
+            width: 240px;
+            max-width: 45vw;
+        }
+
+        #node-search {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 14px;
+            background: rgba(30, 40, 70, 0.8);
+            border: 1px solid rgba(120, 150, 255, 0.4);
+            border-radius: 6px;
+            color: #e0e8ff;
+            font-family: "League Spartan", sans-serif;
+        }
+
+        #node-search:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 320px;
+            overflow-y: auto;
+            background: rgba(10, 14, 22, 0.95);
+            border: 1px solid rgba(120, 150, 255, 0.4);
+            border-radius: 6px;
+            margin-top: 4px;
+            z-index: 25;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            display: none;
+            backdrop-filter: blur(6px);
+        }
+
+        .search-results.visible {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            border-bottom: 1px solid rgba(120, 150, 255, 0.15);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover,
+        .search-result-item:focus {
+            background: rgba(60, 100, 180, 0.5);
+        }
+
+        .search-result-item .name {
+            font-weight: 500;
+            display: block;
+        }
+
+        .search-result-item .path {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        .search-result-item .stats {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .search-results::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .search-results::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .search-results::-webkit-scrollbar-thumb {
+            background: rgba(75, 83, 185, 0.6);
+            border-radius: 10px;
+        }
+
+        .search-results::-webkit-scrollbar-thumb:hover {
+            background: rgba(75, 83, 185, 0.8);
+        }
+
+        .nasalogo {
+            top: 5rem;
+        }
     </style>
-    <link rel="stylesheet" href="default.css">
+
 
 </head>
 
@@ -233,13 +317,22 @@ if (!isset($_SESSION['user'])) {
     <div id="app">
 
         <div id="header">
-            <div>
+            <!-- Left side -->
+            <div style="display: flex; flex-direction: column; gap: 4px;">
                 <div id="current-node">Select a location</div>
                 <div id="path"></div>
             </div>
-            <button id="back-btn" class="back-btn" style="display:none;">↑ Back</button>
-            <a href="dashboard.php"><img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo" style="top:5rem;"></a>
 
+            <!-- Right side – search takes priority on the far right -->
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div id="node-search-container">
+                    <input type="text" id="node-search" placeholder="Search locations..." autocomplete="off">
+                    <div id="search-results" class="search-results"></div>
+                </div>
+
+                <button id="back-btn" class="back-btn" style="display:none;">↑ Back</button>
+                <a href="dashboard.php"><img src="images/NASA-Logo.png" alt="Nasa Logo" class="nasalogo"></a>
+            </div>
         </div>
 
         <!-- Replace the entire <div id="mermaid-container"> ... </div> block with this -->
@@ -271,7 +364,9 @@ if (!isset($_SESSION['user'])) {
     </div>
 
     <script>
-        // Mermaid configuration
+        // =============================
+        // MERMAID CONFIG
+        // =============================
         mermaid.initialize({
             startOnLoad: false,
             theme: 'dark',
@@ -280,35 +375,45 @@ if (!isset($_SESSION['user'])) {
                 useMaxWidth: false,
                 htmlLabels: true,
                 nodeSpacing: 60,
-                rankSpacing: 100
-            }
+                rankSpacing: 100,
+            },
         });
 
-        // Global state - Pan + Zoom
+        // =============================
+        // PAN + ZOOM ENGINE
+        // =============================
         const viewport = document.getElementById('mermaid-viewport');
         const wrapper = document.getElementById('mermaid-wrapper');
 
         let scale = 1;
         let panX = 0;
-        let panY = 80;
-        let isPanning = false;
-        let startX, startY;
+        let panY = 60;
 
+        let lastScale = 1;
+
+        // Smooth transform update
         function updateTransform() {
             wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
         }
 
+        // =============================
+        // DESKTOP CONTROLS
+        // =============================
+        let isPanning = false;
+        let startX, startY;
+
         viewport.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
-            isPanning = true;
+
             startX = e.clientX - panX;
             startY = e.clientY - panY;
+            isPanning = true;
             viewport.style.cursor = 'grabbing';
-            e.preventDefault();
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isPanning) return;
+
             panX = e.clientX - startX;
             panY = e.clientY - startY;
             updateTransform();
@@ -319,37 +424,333 @@ if (!isset($_SESSION['user'])) {
             viewport.style.cursor = 'grab';
         });
 
-        document.addEventListener('mouseleave', () => {
-            isPanning = false;
-            viewport.style.cursor = 'grab';
-        });
-
+        // =============================
+        // DESKTOP ZOOM
+        // =============================
         viewport.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomSpeed = 0.15;
-            const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
+
+            const zoomSpeed = 0.04;
             const oldScale = scale;
-            scale = Math.max(0.3, Math.min(5, scale + delta));
+
+            scale += e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
+            scale = Math.max(0.3, Math.min(5, scale));
+
             const rect = viewport.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
             const factor = scale / oldScale;
-            panX = mouseX - (mouseX - panX) * factor;
-            panY = mouseY - (mouseY - panY) * factor;
+
+            panX = mx - (mx - panX) * factor;
+            panY = my - (my - panY) * factor;
+
+            /* CRITICAL FIX */
+            targetPanX = panX;
+            targetPanY = panY;
+
             updateTransform();
+        }, {
+            passive: false
         });
 
-        viewport.addEventListener('dblclick', () => {
-            scale = 1;
-            panX = 0;
-            panY = 0;
-            updateTransform();
+        // =============================
+        // HAMMER MOBILE
+        // =============================
+        const hammer = new Hammer(viewport, {
+            touchAction: 'none'
         });
 
-        viewport.style.cursor = 'grab';
+        hammer.get('pan').set({
+            direction: Hammer.DIRECTION_ALL,
+            threshold: 2,
+        });
 
+        hammer.get('pinch').set({
+            enable: true
+        });
+
+        // =============================
+        // PERFECT SMOOTH PAN ENGINE
+        // =============================
+
+        let targetPanX = panX;
+        let targetPanY = panY;
+
+        let velocityX = 0;
+        let velocityY = 0;
+
+        let lastPanX = 0;
+        let lastPanY = 0;
+
+
+        // 60FPS smoothing engine
+        function smoothEngine() {
+
+            panX += (targetPanX - panX) * 0.22;
+            panY += (targetPanY - panY) * 0.22;
+
+            // No inertia
+            velocityX = 0;
+            velocityY = 0;
+
+            updateTransform();
+
+            requestAnimationFrame(
+                smoothEngine
+            );
+
+        }
+
+        smoothEngine();
+
+
+        // Start pan
+        hammer.on('panstart', () => {
+
+            lastPanX = 0;
+            lastPanY = 0;
+
+            velocityX = 0;
+            velocityY = 0;
+
+        });
+
+
+        // During pan
+        hammer.on('pan', ev => {
+
+            const dx =
+                ev.deltaX - lastPanX;
+
+            const dy =
+                ev.deltaY - lastPanY;
+
+            lastPanX = ev.deltaX;
+            lastPanY = ev.deltaY;
+
+            targetPanX += dx;
+            targetPanY += dy;
+
+            velocityX = dx * 0.15;
+            velocityY = dy * 0.15;
+
+        });
+
+
+        // End pan
+        hammer.on('panend', () => {
+
+            velocityX = 0;
+            velocityY = 0;
+
+        });
+
+        // =============================
+        // PERFECT PINCH ZOOM
+        // =============================
+
+        let startScale = 1;
+        let startPanX = 0;
+        let startPanY = 0;
+        let pinchCenterX = 0;
+        let pinchCenterY = 0;
+
+
+        // Pinch start
+        hammer.on('pinchstart', (ev) => {
+
+            const rect =
+                viewport.getBoundingClientRect();
+
+            startScale = scale;
+
+            startPanX = panX;
+            startPanY = panY;
+
+            pinchCenterX =
+                ev.center.x - rect.left;
+
+            pinchCenterY =
+                ev.center.y - rect.top;
+
+        });
+
+
+        // Pinching
+        hammer.on('pinch', (ev) => {
+
+            let newScale =
+                startScale * ev.scale;
+
+            newScale =
+                Math.max(0.3,
+                    Math.min(5, newScale));
+
+            const scaleFactor =
+                newScale / startScale;
+
+            scale = newScale;
+
+            panX =
+                pinchCenterX -
+                (pinchCenterX - startPanX) * scaleFactor;
+
+            panY =
+                pinchCenterY -
+                (pinchCenterY - startPanY) * scaleFactor;
+
+            /* CRITICAL FIX */
+            targetPanX = panX;
+            targetPanY = panY;
+
+            updateTransform();
+
+        });
+
+        hammer.on('doubletap', () => {
+
+            // Remove highlight from nodes
+            document
+                .querySelectorAll('.node')
+                .forEach(n =>
+                    n.classList.remove('selected')
+                );
+
+            // Clear selected node
+            currentNodeId = null;
+
+            currentNodeEl.textContent =
+                "Select a location";
+
+            pathEl.textContent = "";
+
+            itemsList.innerHTML =
+                "Select a node to see items";
+
+        });
+
+        // BLOCK BROWSER ZOOM
+        viewport.addEventListener('touchmove', (e) => {
+            if (e.touches.length >= 2) e.preventDefault();
+        }, {
+            passive: false
+        });
+
+        // =============================
+        // MOBILE START POSITION
+        // =============================
+        if (window.innerWidth < 768) {
+            scale = 0.45;
+            panY = 20;
+            updateTransform();
+        }
         let treeData = null;
         let currentNodeId = null;
+
+        // ─── NODE SEARCH ────────────────────────────────────────────────
+
+        const searchInput = document.getElementById('node-search');
+        const searchResults = document.getElementById('search-results');
+
+        let allNodesFlat = [];
+
+        // Build flat list of nodes once hierarchy is loaded
+        function buildFlatNodeList(nodes, path = []) {
+            const list = [];
+            for (const node of nodes) {
+                const fullPath = [...path, node.name];
+                list.push({
+                    id: String(node.id),
+                    name: node.name,
+                    path: fullPath.slice(0, -1).join(" › "),
+                    itemCount: node.item_count || 0,
+                    childrenCount: node.children?.length || 0
+                });
+                if (node.children?.length) {
+                    list.push(...buildFlatNodeList(node.children, fullPath));
+                }
+            }
+            return list;
+        }
+
+        // Called from loadAndRender after treeData is set
+        function prepareSearch() {
+            allNodesFlat = buildFlatNodeList(treeData);
+        }
+
+        function renderSearchResults(matches) {
+            if (!matches.length) {
+                searchResults.innerHTML = '<div class="search-result-item" style="color:#94a3b8;padding:12px;text-align:center;">No matches</div>';
+                searchResults.classList.add('visible');
+                return;
+            }
+
+            let html = '';
+            matches.forEach(match => {
+                html += `
+            <div class="search-result-item" data-node-id="${match.id}">
+                <span class="name">${match.name}</span>
+                ${match.path ? `<span class="path">${match.path}</span>` : ''}
+                <div class="stats">${match.childrenCount} children • ${match.itemCount} items</div>
+            </div>
+        `;
+            });
+            searchResults.innerHTML = html;
+            searchResults.classList.add('visible');
+
+            // Click handler for results
+            searchResults.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const nodeId = item.dataset.nodeId;
+                    selectNode(nodeId);
+
+                    // Also try to find & highlight the node in diagram
+                    const nodeEl = document.querySelector(`.node[id^="flowchart-n${nodeId}"]`) ||
+                        document.querySelector(`.node[id$="n${nodeId}"]`);
+                    if (nodeEl) {
+                        document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+                        nodeEl.classList.add('selected');
+                        centerOnNode(nodeEl);
+                    }
+
+                    // Hide results & clear input
+                    searchInput.value = '';
+                    searchResults.classList.remove('visible');
+                    searchResults.innerHTML = '';
+                });
+            });
+        }
+
+        // Live search
+        searchInput.addEventListener('input', () => {
+            const term = searchInput.value.trim().toLowerCase();
+            if (term.length < 1) {
+                searchResults.classList.remove('visible');
+                return;
+            }
+
+            const matches = allNodesFlat.filter(node =>
+                node.name.toLowerCase().includes(term)
+            ).slice(0, 15); // limit shown results
+
+            renderSearchResults(matches);
+        });
+
+        // Hide results when clicking outside
+        document.addEventListener('click', e => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.remove('visible');
+            }
+        });
+
+        // Optional: focus search with keyboard shortcut (e.g. / or Ctrl+K)
+        document.addEventListener('keydown', e => {
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey && document.activeElement !== searchInput) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
 
         const mermaidDiv = document.getElementById('mermaid-output');
         const currentNodeEl = document.getElementById('current-node');
@@ -386,6 +787,8 @@ if (!isset($_SESSION['user'])) {
                 if (Array.isArray(treeData)) {
                     attachParents(treeData, null); // start with root nodes having parent = null
                 }
+
+                prepareSearch();
 
                 if (treeData?.length > 0) {
                     renderMermaid(treeData);
@@ -478,7 +881,12 @@ if (!isset($_SESSION['user'])) {
 
                         panX = targetX;
                         panY = targetY;
+
+                        targetPanX = targetX;
+                        targetPanY = targetY;
+
                         scale = 1;
+
                         updateTransform();
                     }
                 });
@@ -500,8 +908,15 @@ if (!isset($_SESSION['user'])) {
             const nodeCenterY = nodeRect.top + nodeRect.height / 2;
             const viewportCenterY = viewportRect.top + viewportRect.height / 2;
 
-            const targetPanX = panX + (viewportCenterX - nodeCenterX);
-            const targetPanY = panY + (viewportCenterY - nodeCenterY);
+            const newTargetPanX =
+                panX + (viewportCenterX - nodeCenterX);
+
+            const newTargetPanY =
+                panY + (viewportCenterY - nodeCenterY);
+
+            /* Update engine target */
+            targetPanX = newTargetPanX;
+            targetPanY = newTargetPanY;
 
             const startX = panX;
             const startY = panY;
@@ -518,8 +933,12 @@ if (!isset($_SESSION['user'])) {
                 progress = Math.min(1, Math.max(0, progress));
                 const eased = easeOutQuad(progress);
 
-                panX = startX + (targetPanX - startX) * eased;
-                panY = startY + (targetPanY - startY) * eased;
+                panX = startX + (newTargetPanX - startX) * eased;
+                panY = startY + (newTargetPanY - startY) * eased;
+
+                /* CRITICAL FIX */
+                window.targetPanX = panX;
+                window.targetPanY = panY;
 
                 updateTransform();
 

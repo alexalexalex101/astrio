@@ -21,15 +21,7 @@ $user = $_SESSION['user'];
             overflow: hidden;
         }
 
-        /* NASA LOGO */
-        .nasa-logo {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 120px;
-            z-index: 2000;
-            filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.18));
-        }
+
 
         /* LOGOUT BUTTON */
         .logout-btn {
@@ -282,7 +274,7 @@ $user = $_SESSION['user'];
             padding-right: 6px;
             white-space: nowrap;
             /* prevents wrapping */
-            margin-top: 62px;
+            margin-top: 80px;
         }
 
         /* Prevent sideways clipping */
@@ -711,12 +703,20 @@ $user = $_SESSION['user'];
             /* brighter on hover — same as sidebar */
         }
 
-        @media (min-width: 769px) and (max-width: 1200px) and (orientation: landscape) {
-            .tree-scroll {
-                margin-top: 80px;
-            }
+        .button-header {
+            display: flex;
+            justify-content: space-between;
         }
 
+        #takeSelectedBtn {
+            background-color: #3fcf57;
+        }
+
+        @media (min-width: 769px) and (max-width: 1200px) and (orientation: landscape) {
+            .tree-scroll {
+                margin-top: 110px;
+            }
+        }
     </style>
 
 </head>
@@ -725,7 +725,7 @@ $user = $_SESSION['user'];
 
     <!-- NASA LOGO (same size + position as dashboard) -->
     <a href="dashboard.php">
-        <img src="images/NASA-Logo.png" class="nasa-logo">
+        <img src="images/NASA-Logo.png" class="nasalogo">
     </a>
 
     <!-- MAIN WRAPPER -->
@@ -799,7 +799,11 @@ $user = $_SESSION['user'];
 
             <!-- ITEMS TABLE -->
             <div id="nodeItemsWrapper">
-                <button id="takeSelectedBtn" class="control-btn" style="display:none; margin-bottom:10px;">Take Selected</button>
+                <div class="button-header">
+                    <button id="itemsBackContainer" class="control-btn" style="box-shadow:0 4px 12px rgba(185, 28, 28, 0.4);background-color:#b91c1c;display:none; margin-bottom:10px;">← Back</button>
+                    <button id="moveSelectedBtn" class="control-btn" style="display:none; margin-bottom:10px; background-color:#8b5cf6;">Move Selected</button>
+                    <button id="takeSelectedBtn" class="control-btn" style="display:none; margin-bottom:10px;">Take Selected</button>
+                </div>
                 <div id="noItems" class="no-items"></div>
                 <div id="searchView" class="searchTable" style="display:none;"></div>
                 <table id="itemsTable" class="items-table" style="display:none;">
@@ -849,6 +853,22 @@ $user = $_SESSION['user'];
         </div>
     </div>
 
+<div id="moveDialog" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:5000; justify-content:center; align-items:center;">
+    <div style="background:#1a1f2b; border-radius:12px; padding:24px; width:420px; max-width:92vw; color:white; box-shadow:0 10px 40px rgba(0,0,0,0.6);">
+        <h3 style="margin-top:0; color:#c4d0ff;">Move Selected Items</h3>
+        <p style="color:#a0b0e0; margin:8px 0 16px 0;">Choose destination location:</p>
+        
+        <select id="moveTargetNode" style="width:100%; padding:10px; font-size:15px; background:#2a3040; color:white; border:1px solid #444; border-radius:6px;">
+            <option value="">— Select destination —</option>
+        </select>
+
+        <div style="margin-top:24px; display:flex; gap:12px; justify-content:flex-end;">
+            <button id="moveCancelBtn" style="padding:10px 18px; background:#4b5563; border:none; border-radius:6px; color:white; cursor:pointer;">Cancel</button>
+            <button id="moveConfirmBtn" style="padding:10px 18px; background:#8b5cf6; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Move Items</button>
+        </div>
+    </div>
+</div>
+
     <!-- JS WILL BE ADDED IN BLOCK 3 -->
     <script>
         // ===============================
@@ -881,8 +901,15 @@ $user = $_SESSION['user'];
             setupIncoming();
 
             const takeBtn = document.getElementById('takeSelectedBtn');
+            const backBtn = document.getElementById('itemsBackContainer');
             if (takeBtn) takeBtn.onclick = takeSelected;
+            if (backBtn) backBtn.onclick = backBtn.onclick = () => {
 
+                if (currentNode && currentNode.parent) {
+                    selectNode(currentNode.parent);
+                }
+
+            };
             // The interval check can stay, but it's now redundant with the cleanup above
             if (highlightItemId) {
                 const checkTreeInterval = setInterval(() => {
@@ -892,6 +919,7 @@ $user = $_SESSION['user'];
                     }
                 }, 300);
             }
+            document.getElementById("moveSelectedBtn").onclick = moveSelected;
         });
 
         // New function: jump to the node's parent and highlight item
@@ -1216,6 +1244,8 @@ $user = $_SESSION['user'];
             const body = document.getElementById("itemsBody");
             const noItems = document.getElementById("noItems");
             const takeBtn = document.getElementById('takeSelectedBtn');
+            const backBtn = document.getElementById('itemsBackContainer')
+            const moveBtn = document.getElementById("moveSelectedBtn")
 
             body.innerHTML = "";
 
@@ -1223,13 +1253,16 @@ $user = $_SESSION['user'];
                 noItems.textContent = "No items in this node.";
                 table.style.display = "none";
                 if (takeBtn) takeBtn.style.display = 'none';
+                if (backBtn) backBtn.style.display = 'none';
+                if (moveBtn) moveBtn.style.display = "none";
                 return;
             }
 
             noItems.textContent = "";
             table.style.display = "table";
             if (takeBtn) takeBtn.style.display = 'inline-block';
-
+            if (backBtn) backBtn.style.display = 'inline-block';
+            if (moveBtn) moveBtn.style.display = "inline-block";
             items.forEach(item => {
                 const tr = document.createElement("tr");
                 tr.dataset.itemId = item.id;
@@ -1361,7 +1394,11 @@ $user = $_SESSION['user'];
             document.getElementById("itemsTable").style.display = "none";
             document.getElementById("noItems").textContent = "";
             const takeBtn = document.getElementById('takeSelectedBtn');
+            const backBtn = document.getElementById('itemsBackContainer');
+            const moveBtn = document.getElementById('moveSelectedBtn');
             if (takeBtn) takeBtn.style.display = 'none';
+            if (backBtn) backBtn.style.display = 'none'
+            if (moveBtn) moveBtn.style.display = 'none'
         }
 
         function takeSelected() {
@@ -1570,136 +1607,138 @@ $user = $_SESSION['user'];
         }
 
         function loadIncoming() {
-    fetch("database/get_incoming_packages.php")
-        .then(r => r.json())
-        .then(packages => {
-            const body = document.getElementById("incomingBody");
-            const empty = document.getElementById("incomingEmpty");
+            fetch("database/get_incoming_packages.php")
+                .then(r => r.json())
+                .then(packages => {
+                    const body = document.getElementById("incomingBody");
+                    const empty = document.getElementById("incomingEmpty");
 
-            body.innerHTML = "";
+                    body.innerHTML = "";
 
-            if (!packages || !packages.length) {
-                empty.textContent = "No incoming packages.";
-                return;
-            }
+                    if (!packages || !packages.length) {
+                        empty.textContent = "No incoming packages.";
+                        return;
+                    }
 
-            empty.textContent = "";
+                    empty.textContent = "";
 
-            packages.forEach(pkg => {
-                body.appendChild(renderIncomingPackageRow(pkg));
+                    packages.forEach(pkg => {
+                        body.appendChild(renderIncomingPackageRow(pkg));
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById("incomingEmpty").textContent =
+                        "Error loading incoming packages.";
+                });
+        }
+
+        function renderIncomingPackageRow(pkg) {
+            const tr = document.createElement("tr");
+
+            const tdCheck = document.createElement("td");
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.className = "incoming-select";
+            cb.dataset.packageId = pkg.package_instance_id;
+            tdCheck.appendChild(cb);
+
+            const tdMain = document.createElement("td");
+
+            const title = document.createElement("div");
+            title.style.fontWeight = "600";
+            title.textContent = `${pkg.package_name} (${pkg.items.length} items)`;
+
+            const expandBtn = document.createElement("button");
+            expandBtn.textContent = "Expand";
+            expandBtn.className = "control-btn";
+            expandBtn.style.marginTop = "6px";
+            expandBtn.style.padding = "4px 8px";
+            expandBtn.style.fontSize = "11px";
+
+            const details = document.createElement("div");
+            details.style.display = "none";
+            details.style.marginTop = "6px";
+            details.style.fontSize = "11px";
+
+            expandBtn.onclick = () => {
+                const open = details.style.display === "none";
+                details.style.display = open ? "block" : "none";
+                expandBtn.textContent = open ? "Collapse" : "Expand";
+            };
+
+            pkg.items.forEach(it => {
+                const line = document.createElement("div");
+                line.textContent = `${it.name} (${it.type}) — RFID: ${it.rfid || "N/A"}`;
+                details.appendChild(line);
             });
-        })
-        .catch(err => {
-            console.error(err);
-            document.getElementById("incomingEmpty").textContent =
-                "Error loading incoming packages.";
-        });
-}
-function renderIncomingPackageRow(pkg) {
-    const tr = document.createElement("tr");
 
-    const tdCheck = document.createElement("td");
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.className = "incoming-select";
-    cb.dataset.packageId = pkg.package_instance_id;
-    tdCheck.appendChild(cb);
+            tdMain.appendChild(title);
+            tdMain.appendChild(expandBtn);
+            tdMain.appendChild(details);
 
-    const tdMain = document.createElement("td");
+            tr.appendChild(tdCheck);
+            tr.appendChild(tdMain);
 
-    const title = document.createElement("div");
-    title.style.fontWeight = "600";
-    title.textContent = `${pkg.package_name} (${pkg.items.length} items)`;
+            return tr;
+        }
 
-    const expandBtn = document.createElement("button");
-    expandBtn.textContent = "Expand";
-    expandBtn.className = "control-btn";
-    expandBtn.style.marginTop = "6px";
-    expandBtn.style.padding = "4px 8px";
-    expandBtn.style.fontSize = "11px";
-
-    const details = document.createElement("div");
-    details.style.display = "none";
-    details.style.marginTop = "6px";
-    details.style.fontSize = "11px";
-
-    expandBtn.onclick = () => {
-        const open = details.style.display === "none";
-        details.style.display = open ? "block" : "none";
-        expandBtn.textContent = open ? "Collapse" : "Expand";
-    };
-
-    pkg.items.forEach(it => {
-        const line = document.createElement("div");
-        line.textContent = `${it.name} (${it.type}) — RFID: ${it.rfid || "N/A"}`;
-        details.appendChild(line);
-    });
-
-    tdMain.appendChild(title);
-    tdMain.appendChild(expandBtn);
-    tdMain.appendChild(details);
-
-    tr.appendChild(tdCheck);
-    tr.appendChild(tdMain);
-
-    return tr;
-}
         function moveSelectedIncoming() {
-    if (!currentNode || !currentNode.id) {
-        alert("Select a node first.");
-        return;
-    }
-
-    const checks = Array.from(
-        document.querySelectorAll(".incoming-select:checked")
-    );
-
-    if (!checks.length) {
-        alert("No packages selected.");
-        return;
-    }
-
-    const packageIds = checks.map(cb => cb.dataset.packageId);
-
-    Promise.all(
-        packageIds.map(id => {
-            const fd = new FormData();
-            fd.append("package_instance_id", id);
-            fd.append("hierarchy_id", currentNode.id);
-
-            return fetch("database/place_package.php", {
-                method: "POST",
-                body: fd
-            }).then(r => r.json());
-        })
-    )
-        .then(async results => {
-            const err = results.find(r => r.error);
-            if (err) {
-                alert("Error placing package: " + err.error);
+            if (!currentNode || !currentNode.id) {
+                alert("Select a node first.");
                 return;
             }
 
-            // Refresh tree
-            await loadTree();
+            const checks = Array.from(
+                document.querySelectorAll(".incoming-select:checked")
+            );
 
-            // Auto-select the last created node
-            const last = results[results.length - 1];
-            if (last && last.new_node_id) {
-                const targetNode = findNodeById(fullTree, String(last.new_node_id));
-                if (targetNode) {
-                    selectNode(targetNode);
-                }
+            if (!checks.length) {
+                alert("No packages selected.");
+                return;
             }
 
-            loadIncoming();
-            document.getElementById("incomingModal").style.display = "none";
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Error placing packages.");
-        });
-}
+            const packageIds = checks.map(cb => cb.dataset.packageId);
+
+            Promise.all(
+                    packageIds.map(id => {
+                        const fd = new FormData();
+                        fd.append("package_instance_id", id);
+                        fd.append("hierarchy_id", currentNode.id);
+
+                        return fetch("database/place_package.php", {
+                            method: "POST",
+                            body: fd
+                        }).then(r => r.json());
+                    })
+                )
+                .then(async results => {
+                    const err = results.find(r => r.error);
+                    if (err) {
+                        alert("Error placing package: " + err.error);
+                        return;
+                    }
+
+                    // Refresh tree
+                    await loadTree();
+
+                    // Auto-select the last created node
+                    const last = results[results.length - 1];
+                    if (last && last.new_node_id) {
+                        const targetNode = findNodeById(fullTree, String(last.new_node_id));
+                        if (targetNode) {
+                            selectNode(targetNode);
+                        }
+                    }
+
+                    loadIncoming();
+                    document.getElementById("incomingModal").style.display = "none";
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Error placing packages.");
+                });
+        }
 
         // ─── Highlight row from URL param on load ──────────────────────────────
         function highlightRowFromUrl() {
@@ -1733,6 +1772,116 @@ function renderIncomingPackageRow(pkg) {
                 }, 600); // small delay so table is rendered
             }
         }
+
+        function updateItemsBackCard() {
+
+            const container = document.getElementById("itemsBackContainer");
+            container.innerHTML = "";
+
+            if (currentNode && currentNode.parent) {
+
+                const backCard = document.createElement("div");
+
+                backCard.className = "back-card";
+
+                backCard.textContent =
+                    "Back to " + currentNode.parent.name;
+
+                backCard.onclick = () =>
+                    selectNode(currentNode.parent);
+
+                container.appendChild(backCard);
+
+            }
+
+        }
+
+function moveSelected() {
+    const checkboxes = document.querySelectorAll('#itemsBody .item-select:checked');
+    
+    if (checkboxes.length === 0) {
+        alert("No items selected.");
+        return;
+    }
+
+    const itemIds = Array.from(checkboxes).map(cb => cb.dataset.id);
+    showMoveToNodeDialog(itemIds);
+}
+
+function showMoveToNodeDialog(itemIds) {
+    const dialog   = document.getElementById("moveDialog");
+    const select   = document.getElementById("moveTargetNode");
+    const confirm  = document.getElementById("moveConfirmBtn");
+    const cancel   = document.getElementById("moveCancelBtn");
+
+    // Clear & populate destinations (exclude current node)
+    select.innerHTML = '<option value="">— Select destination —</option>';
+    
+    function addNodes(nodes, prefix = "") {
+        nodes.forEach(node => {
+            if (String(node.id) !== String(currentNode?.id)) {
+                const option = document.createElement("option");
+                option.value = node.id;
+                option.textContent = prefix + node.name;
+                select.appendChild(option);
+            }
+            if (node.children?.length) {
+                addNodes(node.children, prefix + "   ");
+            }
+        });
+    }
+
+    addNodes(fullTree);
+
+    // Show dialog
+    dialog.style.display = "flex";
+
+    // Confirm action
+    const doMove = () => {
+        const targetId = select.value;
+        if (!targetId) {
+            alert("Please select a destination.");
+            return;
+        }
+        moveItemsToNode(itemIds, targetId);
+        dialog.style.display = "none";
+    };
+
+    confirm.onclick = doMove;
+    cancel.onclick = () => dialog.style.display = "none";
+
+    // Also allow Enter key
+    select.onkeydown = e => { if (e.key === "Enter") doMove(); };
+}
+
+async function moveItemsToNode(itemIds, targetHierarchyId) {
+    try {
+        const response = await fetch("database/move_items.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+                item_ids: itemIds.join(","),
+                target_hierarchy_id: targetHierarchyId
+            })
+        });
+
+        const result = await response.text();
+
+        if (result.trim() === "OK") {
+            // Refresh current view
+            if (currentNode?.id) {
+                loadItems(currentNode.id);
+            }
+            alert("Items moved successfully.");
+        } else {
+            alert("Move failed: " + result);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Connection error while moving items.");
+    }
+}
+
     </script>
 
 

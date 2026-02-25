@@ -122,6 +122,43 @@ $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
             box-shadow: 0 0 35px rgba(75, 83, 185, 0.7);
         }
 
+/* ── Custom styling for the account type dropdown ──────────────────────── */
+select.appFormInput {
+    /* Inherit most things from your existing inputs */
+    background: rgba(15, 35, 80, 0.65);      /* semi-transparent dark blue-ish to match space theme */
+    color: #f0f8ff;                           /* very light off-white for readability */
+    border: 1px solid rgba(160, 190, 255, 0.45);
+    border-radius: 8px;                       /* match typical input rounding */
+    padding: 12px 40px 12px 14px;             /* extra right padding for custom arrow */
+    font-size: 1rem;
+    appearance: none;                         /* remove default browser styling */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    font-family: "Nasalization", sans-serif;
+}
+
+/* Custom dropdown arrow using background image (no extra HTML needed) */
+select.appFormInput {
+    background: rgba(15, 35, 80, 0.65) url("images/chevron-down.svg") no-repeat right 14px center / 16px;
+}
+
+/* Hover/focus states to match your glowy buttons */
+select.appFormInput:hover,
+select.appFormInput:focus {
+    background-color: rgba(25, 55, 120, 0.8);
+    border-color: rgba(160, 190, 255, 0.75);
+    box-shadow: 0 0 14px rgba(75, 83, 185, 0.4);
+    outline: none;
+}
+
+/* Optional: make placeholder/select text slightly dimmer when nothing chosen */
+select.appFormInput option:disabled {
+    color: #a0a0c0;
+}
+
         /* Exact same media query from your landing/login page */
         @media (min-width: 769px) and (max-width: 1200px) and (orientation: landscape) {
             .main-planet {
@@ -133,6 +170,21 @@ $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
                 font-size: 3rem;
             }
 
+            .RegistrationForm {
+                width: 350px;
+                font-size: 1rem;
+            }
+
+            .RegistrationForm div {
+                margin-bottom: 8px;
+            }            
+            .RegistrationForm button {
+                padding: 10px;
+            }
+
+            .RegistrationForm input {
+                height:30px;
+            }
 
         }
 
@@ -172,7 +224,21 @@ $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
                         <input type="password" class="appFormInput" id="password" name="password" required />
                     </div>
 
-                    <button type="submit" class="appBtn"><i class="fa fa-plus"></i> Add User</button>
+                    <!-- ── NEW FIELD ─────────────────────────────────────── -->
+                    <div>
+                        <div class="select-wrapper">
+                            <label for="user_type">Account Type</label>
+                            <select class="appFormInput" id="user_type" name="user_type" required>
+                                <option value="" disabled selected>Select your role</option>
+                                <option value="astronaut">Astronaut</option>
+                                <option value="logistics">Logistics</option>
+                                <option value="admin">Admin (temporary)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- ─────────────────────────────────────────────────── -->
+
+                    <button type="submit" class="appBtn"><i class="fa fa-plus"></i> Register</button>
                     <button type="button" class="appBtn" onclick="history.back()">
                         < Back</button>
                 </form>

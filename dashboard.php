@@ -213,6 +213,10 @@ $fullName = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
     .moons-arc {
         transform: translateY(9%);
     }
+
+    .orbit-moon {
+        font-size: 1.1rem;
+    }
 }
     </style>
 </head>
@@ -234,9 +238,9 @@ $fullName = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
 
     <div class="moons-container">
         <div class="moons-arc">
-            <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='inventory.php'">INVENTORY</div>
-            <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='visualization_tree.php'">VISUALIZATION</div>
             <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='schedule_orders.php'">ORDERS</div>
+            <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='visualization_tree.php'">VISUALIZATION</div>
+            <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='inventory.php'">INVENTORY</div>
             <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='logs.php'">LOGS</div>
             <div class="orbit-moon" role="button" tabindex="0" onclick="location.href='contracts.php'">CONTRACTS</div>
         </div>

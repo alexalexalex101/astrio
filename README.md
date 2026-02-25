@@ -485,3 +485,8 @@ JOIN (
 SET h.used_liters = x.used
 WHERE h.is_generated_package_node = 1;
 
+ALTER TABLE users
+ADD COLUMN user_type ENUM('astronaut', 'logistics', 'admin') 
+NOT NULL 
+DEFAULT 'astronaut'
+AFTER email;
