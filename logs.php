@@ -54,7 +54,7 @@ if ($res) {
 
         .logs-wrap {
             width: min(1200px, 94vw);
-            margin: 8.5rem auto 2.5rem;
+            margin: 5rem auto;
             background: rgba(12, 18, 44, 0.86);
             border-radius: 14px;
             padding: 1rem;
@@ -109,7 +109,6 @@ if ($res) {
     <a href="dashboard.php">
         <img src="images/NASA-Logo.png" alt="NASA Logo" class="nasalogo">
     </a>
-    <a href="database/logout.php" id="logoutBtn">Log out</a>
     <a href="dashboard.php" id="backbutton">Back</a>
 
     <div class="logs-wrap">
@@ -136,8 +135,10 @@ if ($res) {
                             <?php
                                 $status = strtolower((string)$log['status']);
                                 $statusClass = $status === 'success' ? 'status-success' : ($status === 'error' ? 'status-error' : '');
-                                $userLabel = trim((string)($log['user_name'] ?? ''));
-                                if ($userLabel === '') $userLabel = (string)($log['user_email'] ?? '');
+
+                                // Changed: prefer email first
+                                $userLabel = trim((string)($log['user_email'] ?? ''));
+                                if ($userLabel === '') $userLabel = trim((string)($log['user_name'] ?? ''));
                                 if ($userLabel === '') $userLabel = $log['user_id'] !== null ? ('User #' . $log['user_id']) : 'Guest';
                             ?>
                             <tr>

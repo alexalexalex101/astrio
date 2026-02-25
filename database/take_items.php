@@ -3,35 +3,37 @@ require 'db.php';
 require_once 'action_logger.php';
 
 if (!isset($_POST['ids']) || !isset($_POST['amount'])) {
-    log_action($conn, 'take_items', 'error', ['reason' => 'missing_parameters'], 'take_items.php');
+    log_action($conn, 'take_items', 'error', 'missing ids or amount parameter', 'take_items.php');
     exit('Missing parameters');
 }
 
-$ids = array_filter(array_map('intval', explode(',', $_POST['ids'])));
+$raw_ids = explode(',', $_POST['ids']);
+$ids = array_filter(array_map('intval', $raw_ids));
 $amount = intval($_POST['amount']);
 if ($amount < 0) $amount = 0;
 
 if (!$ids) {
-    log_action($conn, 'take_items', 'error', ['reason' => 'no_ids'], 'take_items.php');
+    log_action($conn, 'take_items', 'error', 'no valid numeric item IDs received', 'take_items.php');
     exit('No ids');
 }
 
-// Build placeholders
+// ────────────────────────────────────────────────
+// Prepare & execute UPDATE
+// ────────────────────────────────────────────────
+
 $placeholders = implode(',', array_fill(0, count($ids), '?'));
-// Prepare statement: decrease remaining_percent but not below 0
 $sql = "UPDATE items SET remaining_percent = GREATEST(0, remaining_percent - ?) WHERE id IN ($placeholders)";
 $stmt = $conn->prepare($sql);
+
 if (!$stmt) {
-    log_action($conn, 'take_items', 'error', ['reason' => 'prepare_failed', 'db_error' => $conn->error], 'take_items.php');
+    log_action($conn, 'take_items', 'error', 'SQL prepare failed: ' . $conn->error, 'take_items.php');
     exit('Prepare failed: ' . $conn->error);
 }
 
-// Build types: one for amount + one per id
 $types = str_repeat('i', count($ids) + 1);
 $params = array_merge([$amount], $ids);
 
-// bind_param requires references
-$bind_names[] = $types;
+$bind_names = [$types];
 for ($i = 0; $i < count($params); $i++) {
     $bind_name = 'bind' . $i;
     $$bind_name = $params[$i];
@@ -42,10 +44,41 @@ call_user_func_array([$stmt, 'bind_param'], $bind_names);
 
 $ok = $stmt->execute();
 
+// ────────────────────────────────────────────────
+// Build readable log message
+// ────────────────────────────────────────────────
+
+$count = count($ids);
+$item_word = $count === 1 ? 'item' : 'items';
+
 if ($ok) {
-    log_action($conn, 'take_items', 'success', ['ids' => $ids, 'amount' => $amount], 'take_items.php');
+    // Fetch names only on success (most common case)
+    $id_list = implode(',', $ids);
+    $name_stmt = $conn->prepare("SELECT id, name FROM items WHERE id IN ($id_list)");
+    $name_stmt->execute();
+    $result = $name_stmt->get_result();
+
+    $items_display = [];
+    $name_map = [];
+    while ($row = $result->fetch_assoc()) {
+        $name_map[$row['id']] = $row['name'] ?? 'Unnamed item #' . $row['id'];
+    }
+    $name_stmt->close();
+
+    foreach ($ids as $id) {
+        $name = $name_map[$id] ?? 'Unknown item #' . $id;
+        $items_display[] = "\"$name\" (ID $id)";
+    }
+
+    $items_str = implode(', ', $items_display);
+
+    $msg = "took {$amount}% from {$count} {$item_word}: $items_str";
+    log_action($conn, 'take_items', 'success', $msg, 'take_items.php');
 } else {
-    log_action($conn, 'take_items', 'error', ['ids' => $ids, 'amount' => $amount, 'db_error' => $stmt->error], 'take_items.php');
+    // On error → fall back to IDs only (names would require extra query anyway)
+    $ids_str = implode(', ', $ids);
+    $msg = "failed to take {$amount}% from {$count} {$item_word}: $ids_str – {$stmt->error}";
+    log_action($conn, 'take_items', 'error', $msg, 'take_items.php');
 }
 
 echo $ok ? 'OK' : ('ERR: ' . $stmt->error);

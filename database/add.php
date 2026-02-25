@@ -2,26 +2,30 @@
 session_start();
 include('connection.php');
 include_once('action_logger.php');
+
 $conn = isset($conn) ? $conn : null;
 
-// get table name from the session
+// Get table name from session (fallback to 'users')
 $table_name = $_SESSION['table'] ?? 'users';
 
-// get values sent from the form
-$first_name = $_POST['first_name'] ?? '';
-$last_name  = $_POST['last_name'] ?? '';
-$email      = $_POST['email'] ?? '';
+// Get form values
+$first_name = trim($_POST['first_name'] ?? '');
+$last_name  = trim($_POST['last_name'] ?? '');
+$email      = trim($_POST['email'] ?? '');
 $password   = $_POST['password'] ?? '';
 
-// turn the password into a secure hashed value
+// Hash the password
 $encrypted = password_hash($password, PASSWORD_DEFAULT);
 
-// this will store success or error messages
+// Prepare response array
 $response = [];
 
-// make sure none of the form fields are empty
+// ────────────────────────────────────────────────
+// Validation checks (early exits)
+// ────────────────────────────────────────────────
+
 if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
-    log_action($conn, 'add', 'error', ['reason' => 'missing_required_fields', 'email' => $email], 'add.php');
+    log_action($conn, 'add', 'error', 'registration failed: missing required fields', 'add.php');
     $response = [
         'success' => false,
         'message' => 'All fields are required.'
@@ -31,9 +35,8 @@ if (empty($first_name) || empty($last_name) || empty($email) || empty($password)
     exit;
 }
 
-// check if the email typed in looks like a real email
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    log_action($conn, 'add', 'error', ['reason' => 'invalid_email', 'email' => $email], 'add.php');
+    log_action($conn, 'add', 'error', "registration failed: invalid email format - {$email}", 'add.php');
     $response = [
         'success' => false,
         'message' => 'Please enter a valid email address.'
@@ -43,15 +46,16 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
+// ────────────────────────────────────────────────
+// Check for duplicate email
+// ────────────────────────────────────────────────
+
 try {
-    // check if this email is already in the table
-    // this stops users from signing up with the same email
     $check = $conn->prepare("SELECT id FROM $table_name WHERE email = :email LIMIT 1");
     $check->execute([':email' => $email]);
 
-    // if the query finds 1 or more rows, the email is already used
     if ($check->rowCount() > 0) {
-        log_action($conn, 'add', 'error', ['reason' => 'email_exists', 'email' => $email], 'add.php');
+        log_action($conn, 'add', 'error', "registration failed: email already exists - {$email}", 'add.php');
         $response = [
             'success' => false,
             'message' => 'This email is already registered.'
@@ -61,13 +65,15 @@ try {
         exit;
     }
 
-    // prepare the insert so it is safe from SQL injection
+    // ────────────────────────────────────────────────
+    // Insert new user
+    // ────────────────────────────────────────────────
+
     $stmt = $conn->prepare("
         INSERT INTO $table_name (first_name, last_name, email, password, created_at, updated_at)
         VALUES (:first_name, :last_name, :email, :password, NOW(), NOW())
     ");
 
-    // run the insert using the form values
     $stmt->execute([
         ':first_name' => $first_name,
         ':last_name'  => $last_name,
@@ -75,24 +81,28 @@ try {
         ':password'   => $encrypted
     ]);
 
-    // set a success message
+    // Success
+    $msg = "new user registered successfully: {$email} ({$first_name} {$last_name})";
+    log_action($conn, 'add', 'success', $msg, 'add.php');
+
     $response = [
         'success' => true,
         'message' => 'User successfully added! Please log in.'
     ];
-    log_action($conn, 'add', 'success', ['email' => $email, 'table' => $table_name], 'add.php');
 
     $_SESSION['response'] = $response;
-
-    // send user to login page after successful signup
     header('Location: ../nasalogin.php');
     exit;
+
 } catch (PDOException $e) {
-    // if something goes wrong with the database, show the message
-    log_action($conn, 'add', 'error', ['reason' => 'db_exception', 'email' => $email, 'error' => $e->getMessage()], 'add.php');
+    // Database error
+    $error_msg = $e->getMessage();
+    $log_msg = "registration failed due to database error for {$email} – {$error_msg}";
+    log_action($conn, 'add', 'error', $log_msg, 'add.php');
+
     $response = [
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
+        'message' => 'Database error occurred. Please try again later.'
     ];
 }
 

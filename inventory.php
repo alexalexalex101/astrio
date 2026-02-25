@@ -710,6 +710,13 @@ $user = $_SESSION['user'];
             background: rgba(150, 180, 255, 0.75);
             /* brighter on hover — same as sidebar */
         }
+
+        @media (min-width: 769px) and (max-width: 1200px) and (orientation: landscape) {
+            .tree-scroll {
+                margin-top: 80px;
+            }
+        }
+
     </style>
 
 </head>
@@ -720,9 +727,6 @@ $user = $_SESSION['user'];
     <a href="dashboard.php">
         <img src="images/NASA-Logo.png" class="nasa-logo">
     </a>
-
-    <!-- LOGOUT BUTTON -->
-    <a href="database/logout.php" class="logout-btn">Log out</a>
 
     <!-- MAIN WRAPPER -->
     <div class="inventory-wrapper">

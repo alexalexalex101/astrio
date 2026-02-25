@@ -1,42 +1,59 @@
 <?php
 session_start();
-//if the user is logged in then send them to the dashboard
-//passwords are stored in http://localhost/phpmyadmin/ then go to inventory database and users table
-if (isset($_SESSION['user'])) header('location: dashboard.php');
+
+// If already logged in, redirect to dashboard
+if (isset($_SESSION['user'])) {
+    header('Location: dashboard.php');
+    exit;
+}
 
 $error_message = '';
+
 if ($_POST) {
     include('database/connection.php');
     include_once('database/action_logger.php');
+
     $conn = isset($conn) ? $conn : null;
-    //get user and password if the form is sumitted by post
-    $username = $_POST['username'];
-    $password = $_POST['password'];
 
-    //selects the user in the database with the email entered
-    $query = 'SELECT * FROM users WHERE users.email = :email LIMIT 1';
-    $stmt = $conn->prepare($query);
-    $stmt->execute([':email' => $username]);
+    // Get form data
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    //if that user was found then take the first row
-    if ($stmt->rowCount() > 0) {
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
-        $user = $stmt->fetchAll()[0];
-
-        //verify the password against the hashed password in DB
-        //btw to test a password just use the jane doe one from the database
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user'] = $user;
-            log_action($conn, 'nasalogin', 'success', ['email' => $username, 'result' => 'login_success'], 'nasalogin.php');
-            header('Location: dashboard.php');
-            exit;
-        } else {
-            $error_message = 'Please make sure that username and password are correct. ';
-            log_action($conn, 'nasalogin', 'error', ['email' => $username, 'reason' => 'invalid_password'], 'nasalogin.php');
-        }
+    if (empty($username) || empty($password)) {
+        $error_message = 'Please enter both username and password.';
+        log_action($conn, 'nasalogin', 'error', 'login attempt with empty username or password', 'nasalogin.php');
     } else {
-        $error_message = 'Please make sure that username and password are correct. ';
-        log_action($conn, 'nasalogin', 'error', ['email' => $username, 'reason' => 'user_not_found'], 'nasalogin.php');
+        // Select user by email
+        $query = 'SELECT * FROM users WHERE email = :email LIMIT 1';
+        $stmt = $conn->prepare($query);
+        $stmt->execute([':email' => $username]);
+
+        if ($stmt->rowCount() > 0) {
+            $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            $user = $stmt->fetchAll()[0];
+
+            // Verify password
+            if (password_verify($password, $user['password'])) {
+                $_SESSION['user'] = $user;
+
+                // Log success – plain text
+                $msg = "successful login for user: {$username}";
+                log_action($conn, 'nasalogin', 'success', $msg, 'nasalogin.php');
+
+                header('Location: dashboard.php');
+                exit;
+            } else {
+                $error_message = 'Incorrect password. Please try again.';
+                // Log failure – plain text
+                $msg = "failed login for {$username} – invalid password";
+                log_action($conn, 'nasalogin', 'error', $msg, 'nasalogin.php');
+            }
+        } else {
+            $error_message = 'No account found with that email.';
+            // Log failure – plain text
+            $msg = "failed login attempt – user not found: {$username}";
+            log_action($conn, 'nasalogin', 'error', $msg, 'nasalogin.php');
+        }
     }
 }
 ?>
@@ -171,6 +188,19 @@ if ($_POST) {
         .circle, .planetcenter {
             display: none !important;
         }
+
+        #errorMessage {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(200, 50, 50, 0.9);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            z-index: 200;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 
@@ -180,11 +210,11 @@ if ($_POST) {
         <img src="images/NASA-Logo.png" alt="NASA Logo" class="nasalogo">
     </a>
 
-    <?php if (!empty($error_message)) { ?>
+    <?php if (!empty($error_message)): ?>
         <div id="errorMessage">
-            <p>Error: <?= $error_message ?></p>
+            <p><?= htmlspecialchars($error_message) ?></p>
         </div>
-    <?php } ?>
+    <?php endif; ?>
 
     <div class="main-planet">
         <div class="planet-content">
@@ -198,22 +228,18 @@ if ($_POST) {
                     </div>
                     <div class="Username">
                         <div class="inputlabel">
-                            <label>
-                                Username:
-                            </label>
+                            <label>Username:</label>
                         </div>
                         <input type="text" name="username" placeholder="Username" required>
                     </div>
                     <div class="Password">
                         <div class="inputlabel">
-                            <label>
-                                Password:
-                            </label>
+                            <label>Password:</label>
                         </div>
-                        <input type="Password" name="password" placeholder="Password" required>
+                        <input type="password" name="password" placeholder="Password" required>
                     </div>
                     <div class="LoginButton">
-                        <button>Login</button>
+                        <button type="submit">Login</button>
                         <button type="button" onclick="window.location.href='useradd.php'">Register</button>
                     </div>
                 </form>

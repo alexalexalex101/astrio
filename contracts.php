@@ -1,85 +1,131 @@
 <?php
-  session_start();
-  include("database/connection.php");
-  include_once("database/action_logger.php");
+session_start();
+include("database/connection.php");
+include_once("database/action_logger.php");
 
-  /* ------------------------------
-    CONTRACT VALUE FORMATTER
-  ------------------------------ */
-  function formatContractValue($value)
-  {
+/* ------------------------------
+   CONTRACT VALUE FORMATTER
+------------------------------ */
+function formatContractValue($value)
+{
     if ($value >= 1000000000) {
-      return '$' . round($value / 1000000000, 2) . 'B';
+        return '$' . round($value / 1000000000, 2) . 'B';
     } elseif ($value >= 1000000) {
-      return '$' . round($value / 1000000, 2) . 'M';
+        return '$' . round($value / 1000000, 2) . 'M';
     } elseif ($value >= 1000) {
-      return '$' . round($value / 1000, 2) . 'K';
+        return '$' . round($value / 1000, 2) . 'K';
     }
     return '$' . $value;
-  }
+}
 
-  /* ------------------------------
-    HANDLE ADD CONTRACT
-  ------------------------------ */
-  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
+/* ------------------------------
+   HANDLE ADD CONTRACT
+------------------------------ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contract'])) {
     try {
-      $stmt = $conn->prepare("INSERT INTO contracts (supplier_id, contract_name, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)");
-      $stmt->execute([
-        $_POST['supplier_id'],
-        $_POST['contract_name'],
-        $_POST['start_date'],
-        $_POST['end_date'],
-        $_POST['status']
-      ]);
-      log_action($conn, 'contracts', 'success', [
-        'operation' => 'add_contract',
-        'contract_name' => $_POST['contract_name'],
-        'supplier_id' => (int)$_POST['supplier_id']
-      ], 'contracts.php');
-    } catch (Throwable $e) {
-      log_action($conn, 'contracts', 'error', [
-        'operation' => 'add_contract',
-        'error' => $e->getMessage()
-      ], 'contracts.php');
-      throw $e;
-    }
-  }
+        $supplier_id    = intval($_POST['supplier_id'] ?? 0);
+        $contract_name  = trim($_POST['contract_name'] ?? '');
+        $start_date     = $_POST['start_date'] ?? null;
+        $end_date       = $_POST['end_date'] ?? null;
+        $status         = $_POST['status'] ?? 'Pending';
+        $contract_value = !empty($_POST['contract_value']) ? floatval($_POST['contract_value']) : 0;
 
-  /* ------------------------------
-    HANDLE DELETE
-  ------------------------------ */
-  if (isset($_GET['delete'])) {
+        // Basic validation
+        if ($supplier_id <= 0 || empty($contract_name)) {
+            log_action($conn, 'contracts', 'error', 'add contract failed: missing supplier or contract name', 'contracts.php');
+            $_SESSION['error'] = 'Supplier and contract name are required.';
+            header('Location: contracts.php');
+            exit;
+        }
+
+        $stmt = $conn->prepare("
+            INSERT INTO contracts 
+            (supplier_id, contract_name, start_date, end_date, status, contract_value) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $supplier_id,
+            $contract_name,
+            $start_date,
+            $end_date,
+            $status,
+            $contract_value
+        ]);
+
+        // Plain text success with value
+        $msg = "new contract added: \"$contract_name\" (supplier ID $supplier_id)";
+        if ($contract_value > 0) {
+            $msg .= ", value: " . formatContractValue($contract_value);
+        }
+        log_action($conn, 'contracts', 'success', $msg, 'contracts.php');
+
+        $_SESSION['success'] = 'Contract added successfully.';
+        header('Location: contracts.php');
+        exit;
+
+    } catch (Throwable $e) {
+        $contract_name  = trim($_POST['contract_name'] ?? 'Unknown');
+        $supplier_id    = intval($_POST['supplier_id'] ?? 0);
+        $contract_value = floatval($_POST['contract_value'] ?? 0);
+        $err = $e->getMessage();
+
+        $msg = "failed to add contract \"$contract_name\" (supplier ID $supplier_id)";
+        if ($contract_value > 0) {
+            $msg .= ", attempted value: " . formatContractValue($contract_value);
+        }
+        $msg .= " – $err";
+        log_action($conn, 'contracts', 'error', $msg, 'contracts.php');
+
+        $_SESSION['error'] = 'Failed to add contract. Please try again.';
+        header('Location: contracts.php');
+        exit;
+    }
+}
+
+/* ------------------------------
+   HANDLE DELETE
+------------------------------ */
+if (isset($_GET['delete'])) {
     try {
-      $stmt = $conn->prepare("DELETE FROM contracts WHERE contract_id = ?");
-      $stmt->execute([$_GET['delete']]);
-      log_action($conn, 'contracts', 'success', [
-        'operation' => 'delete_contract',
-        'contract_id' => (int)$_GET['delete']
-      ], 'contracts.php');
+        $contract_id = intval($_GET['delete']);
+
+        $stmt = $conn->prepare("DELETE FROM contracts WHERE contract_id = ?");
+        $stmt->execute([$contract_id]);
+
+        // Plain text success
+        $msg = "contract deleted: ID $contract_id";
+        log_action($conn, 'contracts', 'success', $msg, 'contracts.php');
+
+        $_SESSION['success'] = 'Contract deleted successfully.';
+        header('Location: contracts.php');
+        exit;
+
     } catch (Throwable $e) {
-      log_action($conn, 'contracts', 'error', [
-        'operation' => 'delete_contract',
-        'contract_id' => (int)$_GET['delete'],
-        'error' => $e->getMessage()
-      ], 'contracts.php');
-      throw $e;
+        $contract_id = intval($_GET['delete'] ?? 0);
+        $err = $e->getMessage();
+        $msg = "failed to delete contract ID $contract_id – $err";
+        log_action($conn, 'contracts', 'error', $msg, 'contracts.php');
+
+        $_SESSION['error'] = 'Failed to delete contract.';
+        header('Location: contracts.php');
+        exit;
     }
-  }
+}
 
-  /* ------------------------------
-    FETCH DATA
-  ------------------------------ */
-  $suppliersStmt = $conn->query("SELECT supplier_id, name FROM suppliers");
-  $suppliers = $suppliersStmt->fetchAll(PDO::FETCH_ASSOC);
+/* ------------------------------
+   FETCH DATA
+------------------------------ */
+$suppliersStmt = $conn->query("SELECT supplier_id, name FROM suppliers");
+$suppliers = $suppliersStmt->fetchAll(PDO::FETCH_ASSOC);
 
-  $stmt = $conn->query("
+$stmt = $conn->query("
     SELECT c.contract_id, c.contract_name, c.start_date, c.end_date, c.status,
-          c.contract_value, s.name AS supplier_name
+           c.contract_value, s.name AS supplier_name
     FROM contracts c
     JOIN suppliers s ON c.supplier_id = s.supplier_id
     ORDER BY c.start_date ASC
-  ");
-  $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+");
+$contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -178,6 +224,13 @@
     .form-container button:hover {
       background: #182a5e;
     }
+
+  .preview-label {
+    font-size: 0.9rem;
+    color: #a0b0ff;
+    margin-left: 10px;
+    font-weight: 500;
+  }    
   </style>
 </head>
 
@@ -187,7 +240,6 @@
     <img src="images/NASA-Logo.png" alt="NASA Logo" class="nasalogo">
   </a>
 
-  <a href="database/logout.php" id="logoutBtn">Log out</a>
   <a href="dashboard.php" id="backbutton">Back</a>
 
   <div class="main-planet">
@@ -223,6 +275,11 @@
             <option value="Expired">Expired</option>
           </select>
 
+          <!-- NEW FIELD -->
+          <label>Contract Value ($)</label>
+          <span class="preview-label" id="valuePreview">$0</span>
+          <input type="number" name="contract_value" id="previewValue" step="0.01" min="0" placeholder="e.g. 1250000">
+          
           <button type="submit" name="add_contract" style="font-family: 'League Spartan';font-weight:600;margin-top:1rem">Add Contract</button>
         </form>
       </div>
@@ -293,6 +350,45 @@
       addBtn.style.display = 'inline-block';
       cancelBtn.style.display = 'none';
     });
+document.addEventListener('DOMContentLoaded', () => {
+  const valueInput   = document.getElementById('previewValue');
+  const valuePreview = document.getElementById('valuePreview');
+
+  if (!valueInput || !valuePreview) {
+    console.warn("Contract value preview elements not found");
+    return;
+  }
+
+  // JS version of your PHP formatter
+  function formatContractValueJS(value) {
+    if (value >= 1000000000) {
+      return '$' + (value / 1000000000).toFixed(2) + 'B';
+    } else if (value >= 1000000) {
+      return '$' + (value / 1000000).toFixed(2) + 'M';
+    } else if (value >= 1000) {
+      return '$' + (value / 1000).toFixed(2) + 'K';
+    }
+    return '$' + value;
+  }
+
+  function updateValuePreview() {
+    const val = parseFloat(valueInput.value) || 0;
+    valuePreview.textContent = formatContractValueJS(val);
+  }
+
+  valueInput.addEventListener('input', updateValuePreview);
+  valueInput.addEventListener('change', updateValuePreview);
+
+  // Run once on load
+  updateValuePreview();
+
+  // Extra: update when form opens (optional but nice)
+  const addBtn = document.getElementById('incomingItembtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', updateValuePreview);
+  }
+});
+
   </script>
 
 </body>

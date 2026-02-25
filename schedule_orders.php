@@ -32,14 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $priority = $old['priority'];
 
   if (!$scheduledDate) {
+    log_action($conn, 'schedule_orders', 'error', 'schedule failed: missing scheduled date', 'schedule_orders.php');
     $error = "Please choose a scheduled date.";
-    log_action($conn, 'schedule_orders', 'error', ['reason' => 'missing_scheduled_date'], 'schedule_orders.php');
   } elseif ($pkgQty <= 0) {
+    log_action($conn, 'schedule_orders', 'error', "schedule failed: invalid quantity ($pkgQty)", 'schedule_orders.php');
     $error = "Please enter a quantity.";
-    log_action($conn, 'schedule_orders', 'error', ['reason' => 'invalid_quantity', 'quantity' => $pkgQty], 'schedule_orders.php');
   } elseif ($pkgId === 0) {
+    log_action($conn, 'schedule_orders', 'error', 'schedule failed: missing package selection', 'schedule_orders.php');
     $error = "Please select a package.";
-    log_action($conn, 'schedule_orders', 'error', ['reason' => 'missing_package'], 'schedule_orders.php');
   } else {
 
     $user_id = null;
@@ -133,13 +133,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       $conn->commit();
+
+      // Plain text success
+      $msg = "new order scheduled: $pkgQty × \"$pkgName\" (package ID $pkgId), priority $priority, date $scheduledDate";
+      log_action($conn, 'schedule_orders', 'success', $msg, 'schedule_orders.php');
+
       $success = "Package order scheduled.";
-      log_action($conn, 'schedule_orders', 'success', [
-        'package_id' => $pkgId,
-        'package_qty' => $pkgQty,
-        'priority' => $priority,
-        'scheduled_date' => $scheduledDate
-      ], 'schedule_orders.php');
 
       $old = [
         'package_id'=>'','package_qty'=>'',
@@ -148,14 +147,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } catch (Throwable $e) {
       $conn->rollback();
+
+      // Plain text error
+      $err = $e->getMessage();
+      $msg = "failed to schedule order: $pkgQty × package ID $pkgId (priority $priority, date $scheduledDate) – $err";
+      log_action($conn, 'schedule_orders', 'error', $msg, 'schedule_orders.php');
+
       $error = $e->getMessage();
-      log_action($conn, 'schedule_orders', 'error', [
-        'package_id' => $pkgId,
-        'package_qty' => $pkgQty,
-        'priority' => $priority,
-        'scheduled_date' => $scheduledDate,
-        'error' => $e->getMessage()
-      ], 'schedule_orders.php');
     }
   }
 }
@@ -175,7 +173,7 @@ select { color:white; }
 
 <style>
 /* ——— YOUR ENTIRE ORIGINAL STYLING BELOW ——— */
-/* (I am pasting it exactly as-is, unchanged) */
+/* (kept exactly as-is, no changes) */
 
 /* Base Reset */
 * { margin:0; padding:0; box-sizing:border-box; font-family: "League Spartan", sans-serif; }

@@ -1,7 +1,9 @@
 <?php
 session_start();
 require_once 'db.php';
+require_once 'action_logger.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -13,6 +15,7 @@ $packageId    = (int)($_POST['package_instance_id'] ?? 0);
 $parentNodeId = (int)($_POST['hierarchy_id'] ?? 0);
 
 if ($packageId <= 0 || $parentNodeId <= 0) {
+    log_action($conn, 'place_package', 'error', 'package placement failed: missing package or node ID', 'place_package.php');
     echo json_encode(['error' => 'Missing package or node']);
     exit;
 }
@@ -20,9 +23,7 @@ if ($packageId <= 0 || $parentNodeId <= 0) {
 $conn->begin_transaction();
 
 try {
-    // ------------------------------------------------------------
     // 1. Load package info
-    // ------------------------------------------------------------
     $pkg = $conn->prepare("
         SELECT ip.package_id, ip.package_name, fp.package_type
         FROM incoming_packages ip
@@ -33,14 +34,14 @@ try {
     $pkg->execute();
     $pkgInfo = $pkg->get_result()->fetch_assoc();
 
-    if (!$pkgInfo) throw new Exception("Package not found.");
+    if (!$pkgInfo) {
+        throw new Exception("Package not found.");
+    }
 
     $packageName = $pkgInfo['package_name'];
     $packageType = $pkgInfo['package_type'];
 
-    // ------------------------------------------------------------
     // 2. Generate node name (#1, #2, #3…)
-    // ------------------------------------------------------------
     $countStmt = $conn->prepare("
         SELECT COUNT(*) AS c
         FROM hierarchy
@@ -53,9 +54,7 @@ try {
 
     $nodeName = $packageName . " #" . $count;
 
-    // ------------------------------------------------------------
     // 3. Load items inside incoming package
-    // ------------------------------------------------------------
     $items = $conn->prepare("
         SELECT name, type, expiry_date, calories, rfid, remaining_percent, volume_liters
         FROM incoming_items
@@ -73,9 +72,7 @@ try {
         $itemsList[] = $it;
     }
 
-    // ------------------------------------------------------------
-    // 4. STEP 1 — LIVE PARENT CAPACITY CHECK
-    // ------------------------------------------------------------
+    // 4. LIVE PARENT CAPACITY CHECK
     $parent = $conn->prepare("
         SELECT capacity_liters
         FROM hierarchy
@@ -89,11 +86,10 @@ try {
 
     $parentCapacity = (float)$parentInfo['capacity_liters'];
 
-    // Compute parent used volume (same logic as get_hierarchy.php)
+    // Compute parent used volume
     $parentUsed = 0.0;
     $micro = ['POUCH','STRIP','SLEEVE','CASE'];
 
-    // 4A. Children CTBs + microcontainers
     $childStmt = $conn->prepare("
         SELECT id, ctb_type, capacity_liters
         FROM hierarchy
@@ -105,17 +101,11 @@ try {
 
     while ($child = $childRes->fetch_assoc()) {
         $ctbType = $child['ctb_type'];
-
-        if (strpos($ctbType, 'CTB-') === 0) {
-            $parentUsed += (float)$child['capacity_liters'];
-        }
-
-        if (in_array($ctbType, $micro)) {
+        if (strpos($ctbType, 'CTB-') === 0 || in_array($ctbType, $micro)) {
             $parentUsed += (float)$child['capacity_liters'];
         }
     }
 
-    // 4B. Items inside parent
     $itemStmt = $conn->prepare("
         SELECT volume_liters, remaining_percent
         FROM items
@@ -137,9 +127,7 @@ try {
         throw new Exception("Not enough space in the parent container.");
     }
 
-    // ------------------------------------------------------------
     // 5. Create new node
-    // ------------------------------------------------------------
     $insNode = $conn->prepare("
         INSERT INTO hierarchy (parent_id, name, type, ctb_type, is_generated_package_node)
         VALUES (?, ?, 'container', ?, 1)
@@ -148,9 +136,7 @@ try {
     $insNode->execute();
     $newNodeId = $insNode->insert_id;
 
-    // ------------------------------------------------------------
     // 6. Load CTB capacity
-    // ------------------------------------------------------------
     $capStmt = $conn->prepare("
         SELECT capacity_liters
         FROM ctb_specifications
@@ -160,9 +146,7 @@ try {
     $capStmt->execute();
     $capacity = $capStmt->get_result()->fetch_assoc()['capacity_liters'] ?? 0;
 
-    // ------------------------------------------------------------
     // 7. Insert items into new node
-    // ------------------------------------------------------------
     $insItem = $conn->prepare("
         INSERT INTO items
             (hierarchy_id, name, type, expiry_date, calories, rfid, remaining_percent, volume_liters, location)
@@ -189,9 +173,7 @@ try {
         $insItem->execute();
     }
 
-    // ------------------------------------------------------------
-    // 8. Compute new node used_liters (correct formula)
-    // ------------------------------------------------------------
+    // 8. Compute new node used_liters
     $usedStmt = $conn->prepare("
         SELECT SUM(volume_liters * (remaining_percent / 100)) AS used
         FROM items
@@ -209,9 +191,7 @@ try {
     $updateNode->bind_param("ddi", $capacity, $used, $newNodeId);
     $updateNode->execute();
 
-    // ------------------------------------------------------------
-    // 9. STEP 2 — Update parent used_liters
-    // ------------------------------------------------------------
+    // 9. Update parent used_liters
     $newParentUsed = $parentUsed + $used;
 
     $updateParent = $conn->prepare("
@@ -222,13 +202,15 @@ try {
     $updateParent->bind_param("di", $newParentUsed, $parentNodeId);
     $updateParent->execute();
 
-    // ------------------------------------------------------------
     // 10. Delete incoming package
-    // ------------------------------------------------------------
     $conn->query("DELETE FROM incoming_items WHERE package_instance_id = $packageId");
     $conn->query("DELETE FROM incoming_packages WHERE id = $packageId");
 
     $conn->commit();
+
+    // FIXED SUCCESS LOG - your exact desired format
+    $msg = "package placed: \"$nodeName\" (ID $newNodeId) into node \"$packageName\" (ID $packageId)";
+    log_action($conn, 'place_package', 'success', $msg, 'place_package.php');
 
     echo json_encode([
         'ok' => true,
@@ -238,5 +220,11 @@ try {
 
 } catch (Throwable $e) {
     $conn->rollback();
-    echo json_encode(['error' => $e->getMessage()]);
+
+    // FIXED ERROR LOG - matching style
+    $err = $e->getMessage();
+    $msg = "failed to place package \"$packageName\" (ID $packageId) into node ID $parentNodeId – $err";
+    log_action($conn, 'place_package', 'error', $msg, 'place_package.php');
+
+    echo json_encode(['error' => $err]);
 }
