@@ -274,7 +274,7 @@ $user = $_SESSION['user'];
             padding-right: 6px;
             white-space: nowrap;
             /* prevents wrapping */
-            margin-top: 80px;
+            margin-top: 100px;
         }
 
         /* Prevent sideways clipping */
@@ -1881,6 +1881,109 @@ async function moveItemsToNode(itemIds, targetHierarchyId) {
         alert("Connection error while moving items.");
     }
 }
+
+// ────────────────────────────────────────────────
+//        AUTO RFID / BARCODE SCANNER LISTENER
+// ────────────────────────────────────────────────
+
+(function setupRfidAutoScanner() {
+
+    // Configurable settings
+    const MIN_CODE_LENGTH       = 6;          // ignore very short "accidental" inputs
+    const MAX_CODE_LENGTH       = 32;         // most RFID tags are 8–24 chars
+    const SCAN_TIMEOUT_MS       = 80;         // time to wait for next character
+    const IGNORED_KEYS          = new Set(['Shift', 'Control', 'Alt', 'Meta', 'Tab', 'Enter', 'Escape', 'ArrowUp', 'ArrowDown']);
+
+    let buffer                  = '';
+    let timeoutId               = null;
+    let lastScanTime            = 0;
+
+    // DOM elements we care about
+    const globalSearchInput     = document.getElementById('globalSearch');
+    const itemFormArea          = document.getElementById('itemFormArea');
+    const itemRfidInput         = document.getElementById('item_rfid');
+
+    if (!globalSearchInput) {
+        console.warn("Global search input not found → RFID auto-scanner disabled");
+        return;
+    }
+
+    function isFormOpenAndActive() {
+        // 1. Form must be visible
+        if (itemFormArea.style.display !== 'block') return false;
+
+        // 2. RFID field inside form must NOT be focused
+        //    (user is intentionally typing RFID manually)
+        if (document.activeElement === itemRfidInput) return false;
+
+        // Otherwise → form is open but user is not typing in RFID → safe to use scan
+        return true;
+    }
+
+    function handleScanComplete(code) {
+        if (!code || code.length < MIN_CODE_LENGTH) return;
+
+        // ── Most important protection ───────────────────────
+        if (isFormOpenAndActive()) {
+            console.log("[RFID] Form is open → ignoring scan:", code);
+            return;
+        }
+
+        console.log("[RFID/Barcode] Detected:", code);
+
+        // Put into global search + trigger search
+        globalSearchInput.value = code;
+        
+        // Create & dispatch input event (most modern listeners react to it)
+        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+        globalSearchInput.dispatchEvent(inputEvent);
+
+        // Optional: focus search field (helps visibility)
+        globalSearchInput.focus();
+    }
+
+    document.addEventListener('keydown', (e) => {
+        const now = Date.now();
+
+        // Ignore modifier keys, navigation keys, etc.
+        if (IGNORED_KEYS.has(e.key)) return;
+
+        // Very fast typing → probably real keyboard user
+        if (now - lastScanTime > 350 && buffer.length > 0) {
+            // Reset if typing was too slow for scanner
+            buffer = '';
+        }
+
+        lastScanTime = now;
+
+        // Only printable characters
+        if (e.key.length === 1) {
+            buffer += e.key;
+
+            // Clear previous timeout
+            if (timeoutId) clearTimeout(timeoutId);
+
+            // Wait briefly — if no more chars → it's a complete scan
+            timeoutId = setTimeout(() => {
+                if (buffer.length >= MIN_CODE_LENGTH && buffer.length <= MAX_CODE_LENGTH) {
+                    handleScanComplete(buffer.trim());
+                }
+                buffer = '';
+            }, SCAN_TIMEOUT_MS);
+        }
+
+        // Also support immediate Enter (some readers send Enter at end)
+        if (e.key === 'Enter' && buffer.length >= MIN_CODE_LENGTH) {
+            if (timeoutId) clearTimeout(timeoutId);
+            handleScanComplete(buffer.trim());
+            buffer = '';
+            e.preventDefault(); // prevent form submit / other Enter behavior
+        }
+    });
+
+    console.log("RFID/Barcode auto-scanner initialized (ignores input when New Item form RFID field is focused)");
+
+})();
 
     </script>
 
